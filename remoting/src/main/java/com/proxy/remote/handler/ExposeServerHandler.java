@@ -8,6 +8,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -33,9 +34,9 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         byte[] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
         ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.P_TYPE_TRANSFER);
+        proxyMessage.setType(ProxyMessage.TYPE_TRANSFER);
         proxyMessage.setData(bytes);
-        long serialNumber = snProducer.getAndIncrement();
+        String serialNumber = UUID.randomUUID().toString().replace("-","");
         proxyMessage.setSerialNumber(serialNumber);
         ChannelHolder.addIdChannel(serialNumber,ctx.channel());
         this.channel.writeAndFlush(proxyMessage);

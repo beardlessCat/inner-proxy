@@ -27,7 +27,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         log.info("proxy-client has connected,try to auth client !");
         ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.C_TYPE_AUTH);
+        proxyMessage.setType(ProxyMessage.TYPE_AUTH);
         Map<String,Object> metaDate = new HashMap<>();
         metaDate.put("clientId",clientInfo.getClientId());
         metaDate.put("clientSecret",clientInfo.getClientSecret());
@@ -51,7 +51,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_DISCONNECT:
                 handleDisconnectMessage(ctx, proxyMessage);
                 break;
-            case ProxyMessage.P_TYPE_TRANSFER:
+            case ProxyMessage.TYPE_TRANSFER:
                 handleTransferMessage(ctx, proxyMessage);
                 break;
             default:
@@ -86,7 +86,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         log.info("receive message {}",proxyMessage.getType());
         String host=ctx.channel().attr(Constants.INNER_HOST).get() ;
         int port =ctx.channel().attr(Constants.INNER_PORT).get() ;
-        long serialNumber = proxyMessage.getSerialNumber();
+        String serialNumber = proxyMessage.getSerialNumber();
         //连接server
         NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(new ChannelInitializer() {
             @Override

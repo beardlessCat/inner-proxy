@@ -4,36 +4,48 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
+import java.nio.charset.StandardCharsets;
+
 public class ProxyMessageEncoder extends MessageToByteEncoder<ProxyMessage> {
 
     private static final int TYPE_SIZE = 1;
 
-    private static final int SERIAL_NUMBER_SIZE = 8;
+    private static final int SERIAL_NUMBER_SIZE = 1;
 
     private static final int URI_LENGTH_SIZE = 1;
 
     @Override
     protected void encode(ChannelHandlerContext ctx, ProxyMessage msg, ByteBuf out) throws Exception {
         int bodyLength = TYPE_SIZE + SERIAL_NUMBER_SIZE + URI_LENGTH_SIZE;
-        byte[] uriBytes = null;
-        if (msg.getMateData() != null) {
-            uriBytes = msg.getMateData().getBytes();
-            bodyLength += uriBytes.length;
+        byte[] metaDataBytes = null;
+        byte[] snBytes = null;
+
+        if (msg.getSerialNumber() != null) {
+            snBytes = msg.getSerialNumber().getBytes();
+            bodyLength += snBytes.length;
         }
 
+        if (msg.getMateData() != null) {
+            metaDataBytes = msg.getMateData().getBytes();
+            bodyLength += metaDataBytes.length;
+        }
         if (msg.getData() != null) {
             bodyLength += msg.getData().length;
         }
-
+        ////|bodyLength(4)|msgType(1)|snLength(1)|Sn(8)|metaDataLength(1)|metaData(N)|Data(N)|
         // write the total packet length but without length field's length.
         out.writeInt(bodyLength);
-
         out.writeByte(msg.getType());
-        out.writeLong(msg.getSerialNumber());
+        if (snBytes != null) {
+            out.writeByte((byte) snBytes.length);
+            out.writeBytes(snBytes);
+        } else {
+            out.writeByte((byte) 0x00);
+        }
 
-        if (uriBytes != null) {
-            out.writeByte((byte) uriBytes.length);
-            out.writeBytes(uriBytes);
+        if (metaDataBytes != null) {
+            out.writeByte((byte) metaDataBytes.length);
+            out.writeBytes(metaDataBytes);
         } else {
             out.writeByte((byte) 0x00);
         }

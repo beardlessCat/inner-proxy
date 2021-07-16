@@ -11,8 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
-    private Long serialNumber ;
-    public InnerClientHandler(long serialNumber){
+    private String serialNumber ;
+    public InnerClientHandler(String serialNumber){
         this.serialNumber = serialNumber ;
     }
     @Override
@@ -21,7 +21,7 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
         byte[] bytes = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(bytes);
         ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.P_TYPE_TRANSFER);
+        proxyMessage.setType(ProxyMessage.TYPE_TRANSFER);
         proxyMessage.setData(bytes);
         proxyMessage.setSerialNumber(serialNumber);
         Channel channel = ChannelHolder.getChannel(clientId);

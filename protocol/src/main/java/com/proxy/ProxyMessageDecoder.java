@@ -10,7 +10,7 @@ public class ProxyMessageDecoder extends LengthFieldBasedFrameDecoder {
 
     private static final int TYPE_SIZE = 1;
 
-    private static final int SERIAL_NUMBER_SIZE = 8;
+    private static final int SERIAL_NUMBER_SIZE = 1;
 
     private static final int URI_LENGTH_SIZE = 1;
 
@@ -49,25 +49,38 @@ public class ProxyMessageDecoder extends LengthFieldBasedFrameDecoder {
         if (in.readableBytes() < HEADER_SIZE) {
             return null;
         }
-
+        /**
+         * bodyLength
+         */
         int frameLength = in.readInt();
         if (in.readableBytes() < frameLength) {
             return null;
         }
         ProxyMessage proxyMessage = new ProxyMessage();
+        /**
+         * type
+         */
         byte type = in.readByte();
-        long sn = in.readLong();
-
-        proxyMessage.setSerialNumber(sn);
-
         proxyMessage.setType(type);
+        /**
+         * sn
+         */
+        byte snLength = in.readByte();
+        byte[] snByte = new byte[snLength];
+        in.readBytes(snByte);
+        proxyMessage.setSerialNumber(new String(snByte));
 
+        /**
+         * metaData
+         */
         byte uriLength = in.readByte();
-        byte[] uriBytes = new byte[uriLength];
-        in.readBytes(uriBytes);
-        proxyMessage.setMateData(new String(uriBytes));
-
-        byte[] data = new byte[frameLength - TYPE_SIZE - SERIAL_NUMBER_SIZE - URI_LENGTH_SIZE - uriLength];
+        byte[] metaDataBytes = new byte[uriLength];
+        in.readBytes(metaDataBytes);
+        proxyMessage.setMateData(new String(metaDataBytes));
+        /**
+         * data
+         */
+        byte[] data = new byte[frameLength - TYPE_SIZE - SERIAL_NUMBER_SIZE - URI_LENGTH_SIZE - snLength - uriLength];
         in.readBytes(data);
         proxyMessage.setData(data);
 

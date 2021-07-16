@@ -33,7 +33,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_HEARTBEAT:
                 handleHeartbeatMessage(ctx, proxyMessage);
                 break;
-            case ProxyMessage.C_TYPE_AUTH:
+            case ProxyMessage.TYPE_AUTH:
                 handleAuthMessage(ctx, proxyMessage);
                 break;
             case ProxyMessage.TYPE_CONNECT:
@@ -42,7 +42,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_DISCONNECT:
                 handleDisconnectMessage(ctx, proxyMessage);
                 break;
-            case ProxyMessage.P_TYPE_TRANSFER:
+            case ProxyMessage.TYPE_TRANSFER:
                 handleTransferMessage(ctx, proxyMessage);
                 break;
             default:
@@ -103,7 +103,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         //将response消息写会客户端
         log.info("receive Message ",proxyMessage.getType());
-        long serialNumber = proxyMessage.getSerialNumber();
+        String serialNumber = proxyMessage.getSerialNumber();
         ByteBuf buf = ctx.alloc().buffer(proxyMessage.getData().length);
         buf.writeBytes(proxyMessage.getData());
         //获取客户端连接channel信息

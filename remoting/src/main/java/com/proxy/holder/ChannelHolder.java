@@ -10,21 +10,21 @@ public class ChannelHolder {
 
     private static ConcurrentHashMap<String, Channel> clientChannels = new ConcurrentHashMap<>();
 
-    private static ConcurrentHashMap<Long, Channel> idChannels = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, Channel> idChannels = new ConcurrentHashMap<>();
 
     public static void addChannel(Integer port , Channel channel){
         channels.putIfAbsent(port,channel);
     }
 
-    public static Channel getIIdChannel(long id){
+    public static Channel getIIdChannel(String id){
         return idChannels.get(id);
     }
 
-    public static void removeIdChannel(long id){
+    public static void removeIdChannel(String id){
         idChannels.remove(id);
     }
 
-    public static void addIdChannel(long id , Channel channel){
+    public static void addIdChannel(String id , Channel channel){
         idChannels.putIfAbsent(id,channel);
     }
 
