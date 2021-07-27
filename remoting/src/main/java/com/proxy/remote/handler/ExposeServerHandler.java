@@ -36,9 +36,8 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         ProxyMessage proxyMessage = new ProxyMessage();
         proxyMessage.setType(ProxyMessage.TYPE_TRANSFER);
         proxyMessage.setData(bytes);
-        String serialNumber = UUID.randomUUID().toString().replace("-","");
+        String serialNumber = ctx.channel().attr(Constants.CHANNEL_ID).get();
         proxyMessage.setSerialNumber(serialNumber);
-        ChannelHolder.addIdChannel(serialNumber,ctx.channel());
         this.channel.writeAndFlush(proxyMessage);
     }
 
@@ -46,15 +45,16 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println(this);
         //绑定channel
-        Channel channel = ctx.channel();
-        String channelId = ctx.channel().id().asLongText();
-
-        this.channel.attr(Constants.EXPOSE_CHANNEL).set(channel);
+        String serialNumber = UUID.randomUUID().toString().replace("-","");
+        ChannelHolder.addIdChannel(serialNumber,ctx.channel());
+        ctx.channel().attr(Constants.CHANNEL_ID).set(serialNumber);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("客户端连接断开！");
+        System.out.println("client disConnected！");
+        String channelId = ctx.channel().attr(Constants.CHANNEL_ID).get();
+        ChannelHolder.removeIdChannel(channelId);
         // // 通知代理客户端
         // Channel userChannel = ctx.channel();
         // InetSocketAddress sa = (InetSocketAddress) userChannel.localAddress();

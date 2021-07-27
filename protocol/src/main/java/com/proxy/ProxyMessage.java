@@ -1,8 +1,5 @@
 package com.proxy;
 
-import java.util.Arrays;
-import java.util.Map;
-
 /**
  * 代理客户端与代理服务器消息交换协议
  *

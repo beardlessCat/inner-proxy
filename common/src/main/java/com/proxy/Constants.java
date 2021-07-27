@@ -14,8 +14,7 @@ public class Constants {
 
     public static final AttributeKey<String> ClIENT_ID = AttributeKey.newInstance("client_id");
 
-    public static final AttributeKey<Channel> EXPOSE_CHANNEL = AttributeKey.newInstance("expose_channel");
-
+    public static final AttributeKey<String> CHANNEL_ID = AttributeKey.newInstance("channel_id");
 
 
 }
