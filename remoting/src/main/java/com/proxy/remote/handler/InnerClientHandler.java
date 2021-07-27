@@ -30,6 +30,7 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+
         super.channelActive(ctx);
     }
 }

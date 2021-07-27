@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Slf4j
 public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage> {
-
+    NettyRemotingServer nettyRemotingServer ;
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         log.info("tcp客户端连接!");
@@ -69,7 +69,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             //保存channel
             authResultMsg = Constants.AUTH_RESULT_SUCCESS;
             //启动客户端，用于接受客户端的http消息。
-            NettyRemotingServer nettyRemotingServer = new NettyRemotingServer( new ChannelInitializer() {
+            nettyRemotingServer = new NettyRemotingServer( new ChannelInitializer() {
                 @Override
                 protected void initChannel(Channel channel) throws Exception {
                     channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
@@ -97,7 +97,8 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     }
 
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-
+        String s = ctx.channel().attr(Constants.INNER_HOST).get();
+        System.out.println(s);
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
@@ -118,5 +119,11 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         heartbeatMessage.setType(ProxyMessage.TYPE_HEARTBEAT);
         // log.debug("response heartbeat message {}", ctx.channel());
         ctx.channel().writeAndFlush(heartbeatMessage);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //proxy-client has disConnected ,will close expose-server
+        super.channelInactive(ctx);
     }
 }

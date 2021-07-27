@@ -8,6 +8,7 @@ import com.proxy.holder.ChannelHolder;
 import com.proxy.remote.NettyRemotingClient;
 import com.proxy.utils.JsonUtil;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +22,11 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     public ProxyClientHandler(ClientInfo clientInfo) {
         this.clientInfo = clientInfo ;
+    }
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        ChannelHolder.removeChannel(clientInfo.getClientId());
+        super.channelInactive(ctx);
     }
 
     @Override
@@ -71,6 +77,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             Channel channel = ctx.channel();
             channel.attr(Constants.INNER_PORT).set(clientInfo.getInnerPort());
             channel.attr(Constants.INNER_HOST).set(clientInfo.getInnerHost());
+            channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
             ChannelHolder.addChannel(clientInfo.getClientId(),channel);
         }else {
             log.info("客户端认证失败，即将关闭连接！");
@@ -79,7 +86,8 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     }
 
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-
+        //数据发送完成后再关闭连接，解决http1.0数据传输问题
+        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {

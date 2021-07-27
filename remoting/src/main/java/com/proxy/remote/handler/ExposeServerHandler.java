@@ -52,59 +52,13 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("client disConnected！");
+        System.out.println("client has disConnected and will notify proxy client!");
         String channelId = ctx.channel().attr(Constants.CHANNEL_ID).get();
         ChannelHolder.removeIdChannel(channelId);
-        // // 通知代理客户端
-        // Channel userChannel = ctx.channel();
-        // InetSocketAddress sa = (InetSocketAddress) userChannel.localAddress();
-        // Channel cmdChannel = ProxyChannelManager.getCmdChannel(sa.getPort());
-        // if (cmdChannel == null) {
-        //
-        //     // 该端口还没有代理客户端
-        //     ctx.channel().close();
-        // } else {
-        //
-        //     // 用户连接断开，从控制连接中移除
-        //     String userId = ProxyChannelManager.getUserChannelUserId(userChannel);
-        //     ProxyChannelManager.removeUserChannelFromCmdChannel(cmdChannel, userId);
-        //     Channel proxyChannel = userChannel.attr(Constants.NEXT_CHANNEL).get();
-        //     if (proxyChannel != null && proxyChannel.isActive()) {
-        //         proxyChannel.attr(Constants.NEXT_CHANNEL).remove();
-        //         proxyChannel.attr(Constants.CLIENT_KEY).remove();
-        //         proxyChannel.attr(Constants.USER_ID).remove();
-        //
-        //         proxyChannel.config().setOption(ChannelOption.AUTO_READ, true);
-        //         // 通知客户端，用户连接已经断开
-        //         ProxyMessage proxyMessage = new ProxyMessage();
-        //         proxyMessage.setType(ProxyMessage.TYPE_DISCONNECT);
-        //         proxyMessage.setUri(userId);
-        //         proxyChannel.writeAndFlush(proxyMessage);
-        //     }
-        // }
-
+        ProxyMessage proxyMessage = new ProxyMessage();
+        proxyMessage.setType(ProxyMessage.TYPE_DISCONNECT);
+        this.channel.writeAndFlush(proxyMessage);
         super.channelInactive(ctx);
-    }
-
-    @Override
-    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-
-        // // 通知代理客户端
-        // Channel userChannel = ctx.channel();
-        // InetSocketAddress sa = (InetSocketAddress) userChannel.localAddress();
-        // Channel cmdChannel = ChannelHolder.getChannel(sa.getPort());
-        // if (cmdChannel == null) {
-        //
-        //     // 该端口还没有代理客户端
-        //     ctx.channel().close();
-        // } else {
-        //     Channel proxyChannel = userChannel.attr(Constants.NEXT_CHANNEL).get();
-        //     if (proxyChannel != null) {
-        //         proxyChannel.config().setOption(ChannelOption.AUTO_READ, userChannel.isWritable());
-        //     }
-        // }
-        //
-        // super.channelWritabilityChanged(ctx);
     }
 
 }
