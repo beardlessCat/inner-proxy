@@ -46,7 +46,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProxyMessage proxyMessage) throws Exception {
-        log.debug("recieved proxy message, type is {}", proxyMessage.getType());
+        // log.debug("recieved proxy message, type is {}", proxyMessage.getType());
         switch (proxyMessage.getType()) {
             case ProxyMessage.TYPE_AUTH_RESULT:
                 handleAuthResultMessage(ctx, proxyMessage);
@@ -86,34 +86,44 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     }
 
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
+        Channel innerChannel = ChannelHolder.getIIdChannel(proxyMessage.getSerialNumber());
+        //关闭innerChannel ,
         //数据发送完成后再关闭连接，解决http1.0数据传输问题
-        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        if(innerChannel!=null&&innerChannel.isActive()){
+            innerChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-        log.info("receive message {}",proxyMessage.getType());
         String host=ctx.channel().attr(Constants.INNER_HOST).get() ;
         int port =ctx.channel().attr(Constants.INNER_PORT).get() ;
         String serialNumber = proxyMessage.getSerialNumber();
-        //连接server
-        NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(new ChannelInitializer() {
-            @Override
-            protected void initChannel(Channel channel) throws Exception {
-                channel.pipeline().addLast(new InnerClientHandler(serialNumber));
-            }
-        }, new MsgCallBack(),host,port);
-        ChannelFuture channelFuture = nettyRemotingClient.run();
-        Channel channel = channelFuture.channel();
-        channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
         ByteBuf buf = ctx.alloc().buffer(proxyMessage.getData().length);
         buf.writeBytes(proxyMessage.getData());
-        if(channel.isActive()){
-            ChannelFuture channelFuture1 = channel.writeAndFlush(buf);
-            channelFuture1.addListener(future -> {
-                if (!future.isSuccess()){
-                    log.error("message send fail !");
+        Channel innerChannel = ChannelHolder.getIIdChannel(serialNumber);
+        if(innerChannel!=null&&innerChannel.isActive()){
+            log.info("reUser channel {}",innerChannel);
+            innerChannel.writeAndFlush(buf);
+        }else {
+            //连接server
+            NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(new ChannelInitializer() {
+                @Override
+                protected void initChannel(Channel channel) throws Exception {
+                    //channel复用时如何传递serialNumber,解决方法每一个clientChannel对应一个innerChannel
+                    channel.pipeline().addLast("innerClientHandler",new InnerClientHandler(serialNumber));
                 }
-            });
+            }, new MsgCallBack(),host,port);
+            ChannelFuture channelFuture = nettyRemotingClient.run();
+            Channel channel = channelFuture.channel();
+            channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
+            if(channel.isActive()){
+                ChannelFuture channelFuture1 = channel.writeAndFlush(buf);
+                channelFuture1.addListener(future -> {
+                    if (!future.isSuccess()){
+                        log.error("message send fail !");
+                    }
+                });
+            }
         }
     }
 

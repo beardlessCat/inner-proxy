@@ -15,6 +15,7 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
     public InnerClientHandler(String serialNumber){
         this.serialNumber = serialNumber ;
     }
+
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
         String clientId = channelHandlerContext.channel().attr(Constants.ClIENT_ID).get();
@@ -30,7 +31,12 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-
+        ChannelHolder.addIdChannel(serialNumber,ctx.channel());
         super.channelActive(ctx);
+    }
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        ChannelHolder.removeIdChannel(serialNumber);
+        super.channelInactive(ctx);
     }
 }

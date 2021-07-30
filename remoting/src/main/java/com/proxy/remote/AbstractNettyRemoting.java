@@ -16,9 +16,21 @@ public abstract class AbstractNettyRemoting {
 
     protected static final int LENGTH_ADJUSTMENT = 0;
 
+    protected ChannelFuture future ;
+
     public abstract ChannelFuture run();
 
-    public abstract void shutDown();
+    public void close(){
+        try {
+            future.channel().close().sync();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }finally {
+            shutdownGracefully();
+        }
+    }
+
+    public abstract void shutdownGracefully();
 
     public abstract ChannelInitializer<Channel> getChannelInitializer();
     /**

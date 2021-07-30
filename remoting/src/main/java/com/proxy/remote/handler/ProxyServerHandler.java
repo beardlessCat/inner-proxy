@@ -99,6 +99,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         String s = ctx.channel().attr(Constants.INNER_HOST).get();
         System.out.println(s);
+        // nettyRemotingServer.close();
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {

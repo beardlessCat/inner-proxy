@@ -70,7 +70,7 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
     }
 
     @Override
-    public void shutDown() {
+    public void shutdownGracefully() {
         eventLoopGroupBoss.shutdownGracefully();
         eventLoopGroupWorker.shutdownGracefully();
     }

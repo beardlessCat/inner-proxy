@@ -30,7 +30,7 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
     public NettyRemotingClient(CallBack callBack, ClientInfo clientInfo) {
         this.callBack =callBack ;
         this.clientInfo = clientInfo ;
-        inetSocketAddress =  new InetSocketAddress(clientInfo.getInnerHost(),clientInfo.getPServerPort());
+        inetSocketAddress =  new InetSocketAddress(clientInfo.getPServerHost(),clientInfo.getPServerPort());
         this.nioEventLoopGroup = new NioEventLoopGroup(
             NettyClientConfig.clientWorkerThreads,
             new ThreadFactory() {
@@ -42,7 +42,7 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
             });
         this.bootstrap.group(this.nioEventLoopGroup).channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.SO_KEEPALIVE, false)
+                .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, NettyClientConfig.connectTimeoutMillis)
                 .option(ChannelOption.SO_SNDBUF, NettyClientConfig.clientSocketSndBufSize)
                 .option(ChannelOption.SO_RCVBUF, NettyClientConfig.clientSocketRcvBufSize)
@@ -85,11 +85,12 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        future = channelFuture;
         return channelFuture ;
     }
 
     @Override
-    public void shutDown() {
+    public void shutdownGracefully() {
         nioEventLoopGroup.shutdownGracefully();
     }
 
