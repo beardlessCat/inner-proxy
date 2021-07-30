@@ -55,7 +55,7 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
         } catch (InterruptedException e) {
             throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e);
         }
-        log.info("服务启动, 端口 " +channelFuture.channel().localAddress());
+        log.info("Proxy-Server has started on port " +channelFuture.channel().localAddress());
         channelFuture.addListener(new GenericFutureListener<Future<? super Void>>() {
             @Override
             public void operationComplete(Future<? super Void> future) throws Exception {

@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * 处理服务端 channel.
  */
+@Slf4j
 public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private Channel channel ;
     public ExposeServerHandler(Channel channel){
@@ -43,7 +45,6 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println(this);
         //绑定channel
         String serialNumber = UUID.randomUUID().toString().replace("-","");
         ChannelHolder.addIdChannel(serialNumber,ctx.channel());
@@ -52,7 +53,7 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("client has disConnected and will notify proxy client!");
+        log.debug("client has disConnected and will notify proxy client!");
         String channelId = ctx.channel().attr(Constants.CHANNEL_ID).get();
         ChannelHolder.removeIdChannel(channelId);
         ProxyMessage proxyMessage = new ProxyMessage();

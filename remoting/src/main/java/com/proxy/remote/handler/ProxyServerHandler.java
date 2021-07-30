@@ -20,7 +20,6 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     NettyRemotingServer nettyRemotingServer ;
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.info("tcp客户端连接!");
         InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         int port = socketAddress.getPort();
         ChannelHolder.addChannel(port,ctx.channel());
@@ -28,7 +27,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProxyMessage proxyMessage) throws Exception {
-        log.debug("Proxy-Sever received  message {} from proxy-client !", proxyMessage.getType());
+        log.debug("Proxy-Sever received  message {} from Proxy-Client !", proxyMessage.getType());
         switch (proxyMessage.getType()) {
             case ProxyMessage.TYPE_HEARTBEAT:
                 handleHeartbeatMessage(ctx, proxyMessage);
@@ -98,18 +97,15 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         String s = ctx.channel().attr(Constants.INNER_HOST).get();
-        System.out.println(s);
         // nettyRemotingServer.close();
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         //将response消息写会客户端
-        log.info("receive Message ",proxyMessage.getType());
         String serialNumber = proxyMessage.getSerialNumber();
         ByteBuf buf = ctx.alloc().buffer(proxyMessage.getData().length);
         buf.writeBytes(proxyMessage.getData());
         //获取客户端连接channel信息
-        System.out.println(serialNumber);
         Channel userChannel = ChannelHolder.getIIdChannel(serialNumber);
         userChannel.writeAndFlush(buf);
     }
@@ -118,7 +114,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         ProxyMessage heartbeatMessage = new ProxyMessage();
         heartbeatMessage.setSerialNumber(heartbeatMessage.getSerialNumber());
         heartbeatMessage.setType(ProxyMessage.TYPE_HEARTBEAT);
-        // log.debug("response heartbeat message {}", ctx.channel());
+        log.debug("response heartbeat message {}", ctx.channel());
         ctx.channel().writeAndFlush(heartbeatMessage);
     }
 

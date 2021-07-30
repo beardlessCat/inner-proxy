@@ -3,6 +3,7 @@ package com.proxy;
 import com.proxy.callback.MsgCallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
+import org.springframework.util.Assert;
 
 @Slf4j
 public class ClientStartup {
@@ -13,7 +14,14 @@ public class ClientStartup {
     }
 
     private static void main0(String[] args) throws ParseException {
-        //-p_server_host 127.0.0.1 -p_server_port 18080 -client_id 0001  -client_secret 123456 -expose_server_host 127.0.0.1 -expose_server_port 8888 -inner_host 127.0.0.1 -inner_port 80
+        // -p_server_host 127.0.0.1
+        // -p_server_port 18080
+        // -client_id 0001
+        // -client_secret 123456
+        // -expose_server_host 127.0.0.1
+        // -expose_server_port 8888
+        // -inner_host 127.0.0.1
+        // -inner_port 80
 
         Options options = new Options();
         options.addOption("h", false, "Help");
@@ -35,54 +43,37 @@ public class ClientStartup {
         } else {
             ClientInfo.ClientInfoBuilder builder = ClientInfo.builder();
             String pServerHost = cmd.getOptionValue("p_server_host");
-            if (pServerHost == null) {
-                System.out.println("p_server_host cannot be null");
-                return;
-            }
+            Assert.notNull(pServerHost,"p_server_host must not be null!");
             builder.pServerHost(pServerHost);
+
             String pServerPort = cmd.getOptionValue("p_server_port");
-            if (pServerPort == null) {
-                System.out.println("p_server_port cannot be null");
-                return;
-            }
+            Assert.notNull(pServerPort,"p_server_port must not be null!");
             builder.pServerPort(Integer.parseInt(pServerPort));
+
             String clientId = cmd.getOptionValue("client_id");
-            if (clientId == null) {
-                System.out.println("client_id cannot be null");
-                return;
-            }
+            Assert.notNull(clientId,"client_id must not be null!");
             builder.clientId(clientId);
+
             String clientSecret = cmd.getOptionValue("client_secret");
-            if (clientSecret == null) {
-                System.out.println("client_secret cannot be null");
-                return;
-            }
+            Assert.notNull(clientSecret,"client_secret must not be null!");
             builder.clientSecret(clientSecret);
+
             String exposeServerHost = cmd.getOptionValue("expose_server_host");
-            if (exposeServerHost == null) {
-                System.out.println("expose_server_host cannot be null");
-                return;
-            }
+            Assert.notNull(exposeServerHost,"expose_server_host must not be null!");
             builder.exposeServerHost(exposeServerHost);
+
             String exposeServerPort = cmd.getOptionValue("expose_server_port");
-            if (exposeServerPort == null) {
-                System.out.println("expose_server_port cannot be null");
-                return;
-            }
+            Assert.notNull(exposeServerPort,"expose_server_port must not be null!");
             builder.exposeServerPort(Integer.parseInt(exposeServerPort));
 
             String innerHost = cmd.getOptionValue("inner_host");
-            if (innerHost == null) {
-                System.out.println("inner_host cannot be null");
-                return;
-            }
+            Assert.notNull(innerHost,"inner_host must not be null!");
             builder.innerHost(innerHost);
+
             String innerPort = cmd.getOptionValue("inner_port");
-            if (innerPort == null) {
-                System.out.println("inner_port cannot be null");
-                return;
-            }
+            Assert.notNull(innerPort,"inner_port must not be null!");
             builder.innerPort(Integer.parseInt(innerPort));
+
             ClientController clientController = createServerController(builder.build());
             start(clientController);
        }

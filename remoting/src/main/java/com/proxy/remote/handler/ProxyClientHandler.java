@@ -31,7 +31,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.info("proxy-client has connected,try to auth client !");
+        log.info("proxy-client has connected,try to auth !");
         ProxyMessage proxyMessage = new ProxyMessage();
         proxyMessage.setType(ProxyMessage.TYPE_AUTH);
         Map<String,Object> metaDate = new HashMap<>();
@@ -46,7 +46,8 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProxyMessage proxyMessage) throws Exception {
-        // log.debug("recieved proxy message, type is {}", proxyMessage.getType());
+        log.debug("Proxy-Client  received proxy  message {} from Proxy-Server !", proxyMessage.getType());
+
         switch (proxyMessage.getType()) {
             case ProxyMessage.TYPE_AUTH_RESULT:
                 handleAuthResultMessage(ctx, proxyMessage);
@@ -73,14 +74,14 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     private void handleAuthResultMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         String authResult = new String(proxyMessage.getData());
         if(Constants.AUTH_RESULT_SUCCESS.equals(authResult)){
-            log.info("客户端认证成功！");
+            log.info("client auth success！");
             Channel channel = ctx.channel();
             channel.attr(Constants.INNER_PORT).set(clientInfo.getInnerPort());
             channel.attr(Constants.INNER_HOST).set(clientInfo.getInnerHost());
             channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
             ChannelHolder.addChannel(clientInfo.getClientId(),channel);
         }else {
-            log.info("客户端认证失败，即将关闭连接！");
+            log.info("client auth success，connection will close！");
             ctx.close();
         }
     }
@@ -102,7 +103,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         buf.writeBytes(proxyMessage.getData());
         Channel innerChannel = ChannelHolder.getIIdChannel(serialNumber);
         if(innerChannel!=null&&innerChannel.isActive()){
-            log.info("reUser channel {}",innerChannel);
+            log.debug("reUser channel {}",innerChannel);
             innerChannel.writeAndFlush(buf);
         }else {
             //连接server
