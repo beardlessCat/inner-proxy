@@ -1,6 +1,6 @@
 package com.proxy;
 
-import com.proxy.callback.MsgCallBack;
+import com.proxy.callback.CallBack;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.springframework.util.Assert;
@@ -84,7 +84,17 @@ public class ClientStartup {
     }
 
     private static ClientController createServerController(ClientInfo clientInfo) throws ParseException {
-        ClientController serverController = new ClientController(new MsgCallBack(),clientInfo);
+        ClientController serverController = new ClientController(new CallBack() {
+            @Override
+            public void success() {
+
+            }
+
+            @Override
+            public void error() {
+
+            }
+        }, clientInfo);
         return serverController;
     }
 }

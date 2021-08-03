@@ -1,8 +1,9 @@
 package com.proxy;
 
-import com.proxy.callback.MsgCallBack;
+import com.proxy.callback.CallBack;
+import lombok.extern.slf4j.Slf4j;
 import sun.tools.jar.CommandLine;
-
+@Slf4j
 public class ServerStartup {
 
     private static CommandLine commandLine = null;
@@ -22,7 +23,16 @@ public class ServerStartup {
 
     private static ServerController createServerController(String[] args) {
         //process serverConfig
-        ServerController serverController = new ServerController(new MsgCallBack());
+        ServerController serverController = new ServerController(new CallBack() {
+            @Override
+            public void success() {
+                log.info("proxyServer has started successfully!");
+            }
+            @Override
+            public void error() {
+                log.error("proxyServer startup  failed!");
+            }
+        });
         return serverController;
     }
 }

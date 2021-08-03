@@ -2,8 +2,8 @@ package com.proxy.callback;
 
 public interface CallBack {
 
-    void messageSuccess(String successMsg);
+    void success();
 
-    void messageError(String errorMsg);
+    void error();
 
 }

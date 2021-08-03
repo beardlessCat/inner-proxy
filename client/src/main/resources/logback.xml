@@ -2,7 +2,7 @@
 
 <configuration>
     <!-- 项目名称 -->
-    <property name="projectName" value="inner-proxy-client" />
+    <property name="projectName" value="inner-proxyClient" />
     <!-- 日志路径 -->
     <property name="logging.path" value="./logs" />
 
@@ -76,7 +76,7 @@
     </appender>
 
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="CONSOLE" />
 <!--        <appender-ref ref="WARN_FILE" />-->
 <!--        <appender-ref ref="ERROR_FILE" />-->

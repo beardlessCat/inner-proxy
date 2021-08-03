@@ -3,7 +3,7 @@ package com.proxy.remote.handler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.proxy.Constants;
 import com.proxy.ProxyMessage;
-import com.proxy.callback.MsgCallBack;
+import com.proxy.callback.CallBack;
 import com.proxy.holder.ChannelHolder;
 import com.proxy.remote.NettyRemotingServer;
 import com.proxy.utils.JsonUtil;
@@ -27,7 +27,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProxyMessage proxyMessage) throws Exception {
-        log.debug("Proxy-Sever received  message {} from Proxy-Client !", proxyMessage.getType());
+        log.debug("proxy-sever received  message {} from proxyClient !", proxyMessage.getType());
         switch (proxyMessage.getType()) {
             case ProxyMessage.TYPE_HEARTBEAT:
                 handleHeartbeatMessage(ctx, proxyMessage);
@@ -68,12 +68,22 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             //保存channel
             authResultMsg = Constants.AUTH_RESULT_SUCCESS;
             //启动客户端，用于接受客户端的http消息。
-            nettyRemotingServer = new NettyRemotingServer( new ChannelInitializer() {
+            nettyRemotingServer = new NettyRemotingServer(new ChannelInitializer() {
                 @Override
                 protected void initChannel(Channel channel) throws Exception {
                     channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
                 }
-            }, new MsgCallBack(),exposeServerHost,exposeServerPort);
+            }, new CallBack() {
+                @Override
+                public void success() {
+                    log.info("exposeServer({}:{}) has started successfully!",exposeServerHost,exposeServerPort);
+                }
+
+                @Override
+                public void error() {
+                    log.error("exposeServer({}:{}) has started failed!",exposeServerHost,exposeServerPort);
+                }
+            }, exposeServerHost, exposeServerPort);
             ChannelFuture channelFuture = nettyRemotingServer.run();
 
         }
@@ -120,7 +130,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        //proxy-client has disConnected ,will close expose-server
+        //proxyClient has disConnected ,will close expose-server
         super.channelInactive(ctx);
     }
 }

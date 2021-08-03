@@ -77,9 +77,9 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
             channelFuture = this.bootstrap.connect(inetSocketAddress).sync();
             channelFuture.addListener(future -> {
                 if(future.isSuccess()){
-                    callBack.messageSuccess("客户端连接成功！");
+                    callBack.success();
                 }else {
-                    callBack.messageError("客户端连接失败！");
+                    callBack.error();
                 }
             });
         } catch (InterruptedException e) {

@@ -3,7 +3,7 @@ package com.proxy.remote.handler;
 import com.proxy.ClientInfo;
 import com.proxy.Constants;
 import com.proxy.ProxyMessage;
-import com.proxy.callback.MsgCallBack;
+import com.proxy.callback.CallBack;
 import com.proxy.holder.ChannelHolder;
 import com.proxy.remote.NettyRemotingClient;
 import com.proxy.utils.JsonUtil;
@@ -31,7 +31,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.info("proxy-client has connected,try to auth !");
+        log.info("proxyClient has connected,try to auth !");
         ProxyMessage proxyMessage = new ProxyMessage();
         proxyMessage.setType(ProxyMessage.TYPE_AUTH);
         Map<String,Object> metaDate = new HashMap<>();
@@ -46,8 +46,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProxyMessage proxyMessage) throws Exception {
-        log.debug("Proxy-Client  received proxy  message {} from Proxy-Server !", proxyMessage.getType());
-
+        log.debug("proxyClient  received proxy  message {} from proxyServer !", proxyMessage.getType());
         switch (proxyMessage.getType()) {
             case ProxyMessage.TYPE_AUTH_RESULT:
                 handleAuthResultMessage(ctx, proxyMessage);
@@ -106,14 +105,24 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             log.debug("reUser channel {}",innerChannel);
             innerChannel.writeAndFlush(buf);
         }else {
+            log.info("can not get an active channel ,will init a new channel");
             //连接server
             NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(new ChannelInitializer() {
                 @Override
                 protected void initChannel(Channel channel) throws Exception {
                     //channel复用时如何传递serialNumber,解决方法每一个clientChannel对应一个innerChannel
-                    channel.pipeline().addLast("innerClientHandler",new InnerClientHandler(serialNumber));
+                    channel.pipeline().addLast("innerClientHandler", new InnerClientHandler(serialNumber));
                 }
-            }, new MsgCallBack(),host,port);
+            }, new CallBack() {
+                @Override
+                public void success() {
+                    log.info("innerClient has be connected to server!");
+                }
+                @Override
+                public void error() {
+                    log.error("Exception occurred when innerClient is connecting to server!");
+                }
+            }, host, port);
             ChannelFuture channelFuture = nettyRemotingClient.run();
             Channel channel = channelFuture.channel();
             channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
