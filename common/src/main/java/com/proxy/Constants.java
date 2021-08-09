@@ -1,6 +1,5 @@
 package com.proxy;
 
-import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 
 public class Constants {

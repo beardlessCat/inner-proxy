@@ -37,6 +37,7 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         ChannelHolder.removeIdChannel(serialNumber);
+        //不进行消息通知（不关闭client到exposeServer的连接），当有新的消息进入时，发现连接已经断开，将会重新启动客户端连接server。
         super.channelInactive(ctx);
     }
 }

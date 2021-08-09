@@ -85,12 +85,16 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        channelFuture.channel().closeFuture().addListener(future1 -> {
+           shutdownGracefully();
+        });
         future = channelFuture;
         return channelFuture ;
     }
 
     @Override
     public void shutdownGracefully() {
+        log.error("client shutDown!");
         nioEventLoopGroup.shutdownGracefully();
     }
 

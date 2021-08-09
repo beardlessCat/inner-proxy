@@ -1,5 +1,6 @@
 package com.proxy.remote.handler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.proxy.ClientInfo;
 import com.proxy.Constants;
 import com.proxy.ProxyMessage;
@@ -23,10 +24,20 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     public ProxyClientHandler(ClientInfo clientInfo) {
         this.clientInfo = clientInfo ;
     }
+
+
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //step 1:close innerChannel
+
+        //step 2:remove cached innerChannel
+
+        //step 3:shuntDown proxyClient
+        ctx.channel().close();
+        //step 4:remove cached proxyClient
         ChannelHolder.removeChannel(clientInfo.getClientId());
-        super.channelInactive(ctx);
+
     }
 
     @Override
@@ -80,14 +91,16 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
             ChannelHolder.addChannel(clientInfo.getClientId(),channel);
         }else {
-            log.info("client auth success，connection will close！");
+            log.info("client auth fail，connection will close！");
             ctx.close();
         }
     }
 
-    private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
+    private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) throws JsonProcessingException {
         Channel innerChannel = ChannelHolder.getIIdChannel(proxyMessage.getSerialNumber());
-        //关闭innerChannel ,
+        //step 1:remove cached innerChannel
+        ChannelHolder.removeIdChannel(proxyMessage.getSerialNumber());
+        //step 2:close innerChannel
         //数据发送完成后再关闭连接，解决http1.0数据传输问题
         if(innerChannel!=null&&innerChannel.isActive()){
             innerChannel.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
@@ -140,5 +153,10 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     private void handleConnectMessage(ChannelInboundInvoker ctx, ProxyMessage proxyMessage) {
 
 
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        super.exceptionCaught(ctx, cause);
     }
 }

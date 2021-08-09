@@ -21,13 +21,7 @@ public abstract class AbstractNettyRemoting {
     public abstract ChannelFuture run();
 
     public void close(){
-        try {
-            future.channel().close().sync();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }finally {
-            shutdownGracefully();
-        }
+        future.channel().close();
     }
 
     public abstract void shutdownGracefully();

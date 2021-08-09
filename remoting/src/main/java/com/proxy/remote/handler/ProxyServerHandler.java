@@ -38,9 +38,6 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_CONNECT:
                 handleConnectMessage(ctx, proxyMessage);
                 break;
-            case ProxyMessage.TYPE_DISCONNECT:
-                handleDisconnectMessage(ctx, proxyMessage);
-                break;
             case ProxyMessage.TYPE_TRANSFER:
                 handleTransferMessage(ctx, proxyMessage);
                 break;
@@ -61,14 +58,13 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         String clientSecret =(String) map.get("clientSecret");
         int exposeServerPort = (int) map.get("exposeServerPort");
         String exposeServerHost =(String) map.get("exposeServerHost");
-        //fixme validate clientKey and  clientSecret.
         boolean authSuccess = this.validateClient(clientKey,clientSecret) ;
         String authResultMsg = Constants.AUTH_RESULT_FAIL;
         if(authSuccess){
             //保存channel
             authResultMsg = Constants.AUTH_RESULT_SUCCESS;
             //启动客户端，用于接受客户端的http消息。
-            nettyRemotingServer = new NettyRemotingServer(new ChannelInitializer() {
+            this.nettyRemotingServer = new NettyRemotingServer(new ChannelInitializer() {
                 @Override
                 protected void initChannel(Channel channel) throws Exception {
                     channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
@@ -78,22 +74,17 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
                 public void success() {
                     log.info("exposeServer({}:{}) has started successfully!",exposeServerHost,exposeServerPort);
                 }
-
                 @Override
                 public void error() {
                     log.error("exposeServer({}:{}) has started failed!",exposeServerHost,exposeServerPort);
                 }
             }, exposeServerHost, exposeServerPort);
-            ChannelFuture channelFuture = nettyRemotingServer.run();
-
+            nettyRemotingServer.run();
         }
         ProxyMessage authResultMessage = new ProxyMessage();
         authResultMessage.setType(ProxyMessage.TYPE_AUTH_RESULT);
         authResultMessage.setData(authResultMsg.getBytes(StandardCharsets.UTF_8));
         ctx.writeAndFlush(authResultMessage);
-        if(!authSuccess){
-            ctx.channel();
-        }
     }
 
     private boolean validateClient(String clientKey, String clientSecret) {
@@ -103,11 +94,6 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     // handle connect  message
     private void handleConnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
 
-    }
-
-    private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-        String s = ctx.channel().attr(Constants.INNER_HOST).get();
-        // nettyRemotingServer.close();
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
@@ -130,7 +116,19 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        //proxyClient has disConnected ,will close expose-server
-        super.channelInactive(ctx);
+        log.info("proxyClient has disConnected ,exposeServer will be closed ! ");
+        //step 1: close shutDown exposeServer
+        nettyRemotingServer.shutdownGracefully();
+        //step 2: remove proxyClient cached channel
+        InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+        int port = socketAddress.getPort();
+        ChannelHolder.removeChannel(port);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        //异常处理
+        log.info("The client({}) actively closes the connection",ctx.channel().remoteAddress());
+        ctx.close();
     }
 }

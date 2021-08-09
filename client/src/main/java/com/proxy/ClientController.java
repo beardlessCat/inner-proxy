@@ -16,4 +16,8 @@ public class ClientController {
     public void start() {
         abstractNettyRemoting.run();
     }
+
+    public void shutdown() {
+        abstractNettyRemoting.shutdownGracefully();
+    }
 }

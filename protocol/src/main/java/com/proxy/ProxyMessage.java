@@ -5,7 +5,7 @@ package com.proxy;
  *
  *
  */
-public class ProxyMessage {
+public class ProxyMessage  implements Cloneable{
 
     /** 认证消息  */
     public static final byte TYPE_AUTH = 0x01;

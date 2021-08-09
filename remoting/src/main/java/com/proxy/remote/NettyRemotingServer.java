@@ -52,6 +52,7 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
         ChannelFuture channelFuture = null;
         try {
             channelFuture = serverBootstrap.bind().sync();
+            future = channelFuture;
         } catch (InterruptedException e) {
             throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e);
         }
@@ -65,6 +66,9 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
                     callBack.error();
                 }
             }
+        });
+        channelFuture.channel().closeFuture().addListener(future -> {
+           shutdownGracefully();
         });
         return channelFuture;
     }

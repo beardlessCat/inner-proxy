@@ -17,4 +17,8 @@ public class ServerController {
     public void start() {
         abstractNettyRemoting.run();
     }
+
+    public void shutdown() {
+        abstractNettyRemoting.shutdownGracefully();
+    }
 }

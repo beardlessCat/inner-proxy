@@ -10,7 +10,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 处理服务端 channel.
@@ -21,8 +20,6 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
     public ExposeServerHandler(Channel channel){
         this.channel =channel ;
     }
-
-    private static AtomicLong snProducer = new AtomicLong(0);
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

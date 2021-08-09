@@ -1,9 +1,12 @@
 package com.proxy;
 
 import com.proxy.callback.CallBack;
+import com.proxy.thread.ShutdownHookThread;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.springframework.util.Assert;
+
+import java.util.concurrent.Callable;
 
 @Slf4j
 public class ClientStartup {
@@ -80,6 +83,14 @@ public class ClientStartup {
     }
 
     private static void start(ClientController clientController) {
+        //register serverShutdownHook
+        Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                clientController.shutdown();
+                return null;
+            }
+        }));
         clientController.start();
     }
 
@@ -87,12 +98,11 @@ public class ClientStartup {
         ClientController serverController = new ClientController(new CallBack() {
             @Override
             public void success() {
-
+                log.info("proxyClient has be connected to proxyServer!");
             }
-
             @Override
             public void error() {
-
+                log.error("Exception occurred when proxyClient is connecting to proxyServer!");
             }
         }, clientInfo);
         return serverController;

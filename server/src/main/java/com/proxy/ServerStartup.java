@@ -1,8 +1,12 @@
 package com.proxy;
 
 import com.proxy.callback.CallBack;
+import com.proxy.thread.ShutdownHookThread;
 import lombok.extern.slf4j.Slf4j;
 import sun.tools.jar.CommandLine;
+
+import java.util.concurrent.Callable;
+
 @Slf4j
 public class ServerStartup {
 
@@ -18,6 +22,14 @@ public class ServerStartup {
     }
 
     private static void start(ServerController serverController) {
+        //register serverShutdownHook
+        Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                serverController.shutdown();
+                return null;
+            }
+        }));
         serverController.start();
     }
 
