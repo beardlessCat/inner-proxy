@@ -43,15 +43,13 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         log.info("proxyClient has connected,try to auth !");
-        ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.TYPE_AUTH);
         Map<String,Object> metaDate = new HashMap<>();
         metaDate.put("clientId",clientInfo.getClientId());
         metaDate.put("clientSecret",clientInfo.getClientSecret());
         metaDate.put("exposeServerPort",clientInfo.getExposeServerPort());
         metaDate.put("exposeServerHost",clientInfo.getExposeServerHost());
         String  metaStr= JsonUtil.objToStr(metaDate);
-        proxyMessage.setMateData(metaStr);
+        ProxyMessage proxyMessage = ProxyMessage.builder().type(ProxyMessage.TYPE_AUTH).mateData(metaStr).build();
         ctx.writeAndFlush(proxyMessage);
     }
 
@@ -133,6 +131,8 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
                 }
                 @Override
                 public void error() {
+                    //连接出错，发送断开消息
+                    ctx.channel().writeAndFlush(ProxyMessage.disconnectedMessage());
                     log.error("Exception occurred when innerClient is connecting to server!");
                 }
             }, host, port);

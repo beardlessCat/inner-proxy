@@ -1,10 +1,19 @@
 package com.proxy;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * 代理客户端与代理服务器消息交换协议
  *
  *
  */
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 public class ProxyMessage  implements Cloneable{
 
     /** 认证消息  */
@@ -36,36 +45,7 @@ public class ProxyMessage  implements Cloneable{
     /** 数据实体 */
     private byte[] data;
 
-    public String getMateData() {
-        return mateData;
+    public static ProxyMessage disconnectedMessage(){
+        return ProxyMessage.builder().type(TYPE_DISCONNECT).build();
     }
-
-    public void setMateData(String mateData) {
-        this.mateData = mateData;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
-    }
-
-    public byte getType() {
-        return type;
-    }
-
-    public void setType(byte type) {
-        this.type = type;
-    }
-
-    public String getSerialNumber() {
-        return serialNumber;
-    }
-
-    public void setSerialNumber(String serialNumber) {
-        this.serialNumber = serialNumber;
-    }
-
 }

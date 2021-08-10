@@ -32,9 +32,7 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         // Channel channel = ctx.channel().attr(Constants.PROXY_CHANNEL).get();
         byte[] bytes = new byte[buf.readableBytes()];
         buf.readBytes(bytes);
-        ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.TYPE_TRANSFER);
-        proxyMessage.setData(bytes);
+        ProxyMessage proxyMessage = ProxyMessage.builder().type(ProxyMessage.TYPE_TRANSFER).data(bytes).build();
         String serialNumber = ctx.channel().attr(Constants.CHANNEL_ID).get();
         proxyMessage.setSerialNumber(serialNumber);
         this.channel.writeAndFlush(proxyMessage);
@@ -53,9 +51,7 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         log.debug("client has disConnected and will notify proxy client!");
         String channelId = ctx.channel().attr(Constants.CHANNEL_ID).get();
         ChannelHolder.removeIdChannel(channelId);
-        ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.TYPE_DISCONNECT);
-        this.channel.writeAndFlush(proxyMessage);
+        this.channel.writeAndFlush(ProxyMessage.disconnectedMessage());
         super.channelInactive(ctx);
     }
 

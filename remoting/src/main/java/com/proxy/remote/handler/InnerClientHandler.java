@@ -21,10 +21,10 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
         String clientId = channelHandlerContext.channel().attr(Constants.ClIENT_ID).get();
         byte[] bytes = new byte[byteBuf.readableBytes()];
         byteBuf.readBytes(bytes);
-        ProxyMessage proxyMessage = new ProxyMessage();
-        proxyMessage.setType(ProxyMessage.TYPE_TRANSFER);
-        proxyMessage.setData(bytes);
-        proxyMessage.setSerialNumber(serialNumber);
+        ProxyMessage proxyMessage = ProxyMessage.builder()
+                .type(ProxyMessage.TYPE_TRANSFER)
+                .data(bytes)
+                .serialNumber(serialNumber).build();
         Channel channel = ChannelHolder.getChannel(clientId);
         channel.writeAndFlush(proxyMessage);
     }

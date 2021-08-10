@@ -38,6 +38,9 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_CONNECT:
                 handleConnectMessage(ctx, proxyMessage);
                 break;
+            case ProxyMessage.TYPE_DISCONNECT:
+                handleDisconnectMessage(ctx, proxyMessage);
+                break;
             case ProxyMessage.TYPE_TRANSFER:
                 handleTransferMessage(ctx, proxyMessage);
                 break;
@@ -123,6 +126,14 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         int port = socketAddress.getPort();
         ChannelHolder.removeChannel(port);
+    }
+
+    private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
+        String serialNumber = proxyMessage.getSerialNumber();
+        //step 1:close clientChannel
+        ChannelHolder.getIIdChannel(serialNumber).close();
+        //step 2:remove cached clientChannel
+        ChannelHolder.removeIdChannel(serialNumber);
     }
 
     @Override

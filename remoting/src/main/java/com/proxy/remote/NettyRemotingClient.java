@@ -94,7 +94,6 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
 
     @Override
     public void shutdownGracefully() {
-        log.error("client shutDown!");
         nioEventLoopGroup.shutdownGracefully();
     }
 
