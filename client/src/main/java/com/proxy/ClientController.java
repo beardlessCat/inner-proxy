@@ -8,9 +8,8 @@ import com.proxy.remote.NettyRemotingClient;
 public class ClientController {
     private AbstractNettyRemoting abstractNettyRemoting ;
 
-
     public ClientController(CallBack callBack, ClientInfo clientInfo) {
-        this.abstractNettyRemoting  = new NettyRemotingClient(callBack,clientInfo);
+        this.abstractNettyRemoting  = new NettyRemotingClient(callBack,clientInfo).init();
     }
 
     public void start() {

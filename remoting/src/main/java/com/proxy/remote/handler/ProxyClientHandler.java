@@ -118,35 +118,10 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         }else {
             log.info("can not get an active channel ,will init a new channel");
             //连接server
-            NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(new ChannelInitializer() {
-                @Override
-                protected void initChannel(Channel channel) throws Exception {
-                    //channel复用时如何传递serialNumber,解决方法每一个clientChannel对应一个innerChannel
-                    channel.pipeline().addLast("innerClientHandler", new InnerClientHandler(serialNumber));
-                }
-            }, new CallBack() {
-                @Override
-                public void success() {
-                    log.info("innerClient has be connected to server!");
-                }
-                @Override
-                public void error() {
-                    //连接出错，发送断开消息
-                    ctx.channel().writeAndFlush(ProxyMessage.disconnectedMessage());
-                    log.error("Exception occurred when innerClient is connecting to server!");
-                }
-            }, host, port);
-            ChannelFuture channelFuture = nettyRemotingClient.run();
-            Channel channel = channelFuture.channel();
-            channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
-            if(channel.isActive()){
-                ChannelFuture channelFuture1 = channel.writeAndFlush(buf);
-                channelFuture1.addListener(future -> {
-                    if (!future.isSuccess()){
-                        log.error("message send fail !");
-                    }
-                });
-            }
+            ChannelInitializer ChannelInitializer = getChannelInitializer(serialNumber);
+            CallBack callBack = getCallBack(ctx, buf);
+            NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).init();
+            nettyRemotingClient.run();
         }
     }
 
@@ -155,8 +130,40 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+    private CallBack getCallBack(ChannelHandlerContext ctx, ByteBuf buf) {
+        return new CallBack() {
+            @Override
+            public void success(ChannelFuture channelFuture) {
+                log.info("innerClient has be connected to server!");
+                Channel channel = channelFuture.channel();
+                channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
+                if (channel.isActive()) {
+                    ChannelFuture channelFuture1 = channel.writeAndFlush(buf);
+                    channelFuture1.addListener(future -> {
+                        if (!future.isSuccess()) {
+                            log.error("message send fail !");
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void error() {
+                //连接出错，发送断开消息
+                ctx.channel().writeAndFlush(ProxyMessage.disconnectedMessage());
+                log.error("Exception occurred when innerClient is connecting to server!");
+            }
+        };
+    }
+
+    private ChannelInitializer getChannelInitializer(String serialNumber) {
+        ChannelInitializer ChannelInitializer = new ChannelInitializer() {
+            @Override
+            protected void initChannel(Channel channel) throws Exception {
+                //channel复用时如何传递serialNumber,解决方法每一个clientChannel对应一个innerChannel
+                channel.pipeline().addLast("innerClientHandler", new InnerClientHandler(serialNumber));
+            }
+        };
+        return ChannelInitializer;
     }
 }

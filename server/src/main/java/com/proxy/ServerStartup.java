@@ -2,6 +2,7 @@ package com.proxy;
 
 import com.proxy.callback.CallBack;
 import com.proxy.thread.ShutdownHookThread;
+import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
 import sun.tools.jar.CommandLine;
 
@@ -37,7 +38,7 @@ public class ServerStartup {
         //process serverConfig
         ServerController serverController = new ServerController(new CallBack() {
             @Override
-            public void success() {
+            public void success(ChannelFuture channelFuture) {
                 log.info("proxyServer has started successfully!");
             }
             @Override

@@ -13,8 +13,6 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
@@ -26,24 +24,29 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
     private EventLoopGroup eventLoopGroupBoss;
     private CallBack callBack;
     private ServerBootstrap serverBootstrap = new ServerBootstrap();
-    public NettyRemotingServer(CallBack callBack) {
+    private  InetSocketAddress inetSocketAddress ;
+    private ChannelInitializer channelInitializer ;
+
+
+    public NettyRemotingServer(CallBack callBack,InetSocketAddress inetSocketAddress) {
         this.callBack = callBack;
-        initEventLoopGroup();
-        serverBootstrap.group(eventLoopGroupBoss, eventLoopGroupWorker)
-                .channel(useEpoll()? EpollServerSocketChannel.class: NioServerSocketChannel.class)
-                .childHandler(getChannelInitializer())
-                .localAddress(new InetSocketAddress(NettyServerConfig.port));
-        applyConnectionOptions(serverBootstrap);
+        this.inetSocketAddress = inetSocketAddress ;
+        this.channelInitializer = getChannelInitializer();
     }
 
-    public NettyRemotingServer( ChannelInitializer channelInitializer , CallBack callBack ,String host ,int port  ) {
-        this.callBack = callBack;
+    public NettyRemotingServer( ChannelInitializer channelInitializer , CallBack callBack ,InetSocketAddress inetSocketAddress ) {
+        this(callBack,inetSocketAddress);
+        this.channelInitializer = channelInitializer;
+    }
+    @Override
+    public NettyRemotingServer init() {
         initEventLoopGroup();
-        serverBootstrap.group(eventLoopGroupBoss, eventLoopGroupWorker)
+        this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupWorker)
                 .channel(useEpoll()? EpollServerSocketChannel.class: NioServerSocketChannel.class)
-                .childHandler(channelInitializer)
-                .localAddress(new InetSocketAddress(host,port));
-        applyConnectionOptions(serverBootstrap);
+                .childHandler(this.channelInitializer)
+                .localAddress(this.inetSocketAddress);
+        applyConnectionOptions(this.serverBootstrap);
+        return this;
     }
 
 
@@ -53,20 +56,12 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
         try {
             channelFuture = serverBootstrap.bind().sync();
             future = channelFuture;
+            callBack.success(channelFuture);
         } catch (InterruptedException e) {
+            callBack.error();
             throw new RuntimeException("this.serverBootstrap.bind().sync() InterruptedException", e);
         }
         log.info("proxyServer has started on port " +channelFuture.channel().localAddress());
-        channelFuture.addListener(new GenericFutureListener<Future<? super Void>>() {
-            @Override
-            public void operationComplete(Future<? super Void> future) throws Exception {
-                if (future.isSuccess()) {
-                    callBack.success();
-                } else {
-                    callBack.error();
-                }
-            }
-        });
         channelFuture.channel().closeFuture().addListener(future -> {
            shutdownGracefully();
         });
@@ -99,13 +94,13 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
     private void applyConnectionOptions(ServerBootstrap bootstrap) {
         SocketConfig config = NettyServerConfig.socketConfig;
         bootstrap.childOption(ChannelOption.TCP_NODELAY, config.isTcpNoDelay());
-        // if (config.getTcpSendBufferSize() != -1) {
-        //     bootstrap.childOption(ChannelOption.SO_SNDBUF, config.getTcpSendBufferSize());
-        // }
-        // if (config.getTcpReceiveBufferSize() != -1) {
-        //     bootstrap.childOption(ChannelOption.SO_RCVBUF, config.getTcpReceiveBufferSize());
-        //     bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(config.getTcpReceiveBufferSize()));
-        // }
+        if (config.getTcpSendBufferSize() != -1) {
+            bootstrap.childOption(ChannelOption.SO_SNDBUF, config.getTcpSendBufferSize());
+        }
+        if (config.getTcpReceiveBufferSize() != -1) {
+            bootstrap.childOption(ChannelOption.SO_RCVBUF, config.getTcpReceiveBufferSize());
+            bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(config.getTcpReceiveBufferSize()));
+        }
         bootstrap.childOption(ChannelOption.SO_KEEPALIVE, config.isTcpKeepAlive());
         bootstrap.childOption(ChannelOption.SO_LINGER, config.getSoLinger());
         bootstrap.option(ChannelOption.SO_REUSEADDR, config.isReuseAddress());

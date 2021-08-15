@@ -2,6 +2,7 @@ package com.proxy;
 
 import com.proxy.callback.CallBack;
 import com.proxy.thread.ShutdownHookThread;
+import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 import org.springframework.util.Assert;
@@ -97,7 +98,7 @@ public class ClientStartup {
     private static ClientController createServerController(ClientInfo clientInfo) throws ParseException {
         ClientController serverController = new ClientController(new CallBack() {
             @Override
-            public void success() {
+            public void success(ChannelFuture channelFuture) {
                 log.info("proxyClient has be connected to proxyServer!");
             }
             @Override

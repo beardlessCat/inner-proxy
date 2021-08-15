@@ -67,27 +67,40 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             //保存channel
             authResultMsg = Constants.AUTH_RESULT_SUCCESS;
             //启动客户端，用于接受客户端的http消息。
-            this.nettyRemotingServer = new NettyRemotingServer(new ChannelInitializer() {
-                @Override
-                protected void initChannel(Channel channel) throws Exception {
-                    channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
-                }
-            }, new CallBack() {
-                @Override
-                public void success() {
-                    log.info("exposeServer({}:{}) has started successfully!",exposeServerHost,exposeServerPort);
-                }
-                @Override
-                public void error() {
-                    log.error("exposeServer({}:{}) has started failed!",exposeServerHost,exposeServerPort);
-                }
-            }, exposeServerHost, exposeServerPort);
+            ChannelInitializer channelInitializer = getChannelInitializer(ctx);
+            CallBack callBack = getCallBack(exposeServerPort, exposeServerHost);
+            this.nettyRemotingServer = new NettyRemotingServer(channelInitializer, callBack, new InetSocketAddress(exposeServerHost,exposeServerPort)).init();
             nettyRemotingServer.run();
         }
         ProxyMessage authResultMessage = new ProxyMessage();
         authResultMessage.setType(ProxyMessage.TYPE_AUTH_RESULT);
         authResultMessage.setData(authResultMsg.getBytes(StandardCharsets.UTF_8));
         ctx.writeAndFlush(authResultMessage);
+    }
+
+    private ChannelInitializer getChannelInitializer(ChannelHandlerContext ctx) {
+        ChannelInitializer channelInitializer = new ChannelInitializer() {
+            @Override
+            protected void initChannel(Channel channel) throws Exception {
+                channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
+            }
+        };
+        return channelInitializer;
+    }
+
+    private CallBack getCallBack(int exposeServerPort, String exposeServerHost) {
+        CallBack callBack = new CallBack() {
+            @Override
+            public void success(ChannelFuture channelFuture) {
+                log.info("exposeServer({}:{}) has started successfully!", exposeServerHost, exposeServerPort);
+            }
+
+            @Override
+            public void error() {
+                log.error("exposeServer({}:{}) has started failed!", exposeServerHost, exposeServerPort);
+            }
+        };
+        return callBack;
     }
 
     private boolean validateClient(String clientKey, String clientSecret) {
@@ -133,7 +146,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         //step 1:close clientChannel
         ChannelHolder.getIIdChannel(serialNumber).close();
         //step 2:remove cached clientChannel
-        ChannelHolder.removeIdChannel(serialNumber);
+        // ChannelHolder.removeIdChannel(serialNumber);
     }
 
     @Override
