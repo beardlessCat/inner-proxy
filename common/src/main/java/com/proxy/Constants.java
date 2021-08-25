@@ -15,5 +15,9 @@ public class Constants {
 
     public static final AttributeKey<String> CHANNEL_ID = AttributeKey.newInstance("channel_id");
 
+    public static final String PROXY_SERVER_NAME = "proxyServer" ;
+
+    public static final String EXPOSE_SERVER_NAME = "exposeServer" ;
+
 
 }

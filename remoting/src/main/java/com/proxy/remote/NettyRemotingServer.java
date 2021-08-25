@@ -1,5 +1,6 @@
 package com.proxy.remote;
 
+import com.proxy.Constants;
 import com.proxy.ProxyMessageDecoder;
 import com.proxy.ProxyMessageEncoder;
 import com.proxy.callback.CallBack;
@@ -27,16 +28,17 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
     private  InetSocketAddress inetSocketAddress ;
     private ChannelInitializer channelInitializer ;
 
-
     public NettyRemotingServer(CallBack callBack,InetSocketAddress inetSocketAddress) {
         this.callBack = callBack;
         this.inetSocketAddress = inetSocketAddress ;
         this.channelInitializer = getChannelInitializer();
+        super.instanceName = Constants.PROXY_SERVER_NAME;
     }
 
     public NettyRemotingServer( ChannelInitializer channelInitializer , CallBack callBack ,InetSocketAddress inetSocketAddress ) {
         this(callBack,inetSocketAddress);
         this.channelInitializer = channelInitializer;
+        super.instanceName = Constants.EXPOSE_SERVER_NAME;
     }
     @Override
     public NettyRemotingServer init() {
@@ -72,6 +74,7 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
     public void shutdownGracefully() {
         eventLoopGroupBoss.shutdownGracefully();
         eventLoopGroupWorker.shutdownGracefully();
+        log.info("{}-{}:{} has closed successful!",this.instanceName,inetSocketAddress.getAddress(),inetSocketAddress.getPort());
     }
 
     @Override

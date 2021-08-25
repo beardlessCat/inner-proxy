@@ -18,6 +18,8 @@ public abstract class AbstractNettyRemoting {
 
     protected ChannelFuture future ;
 
+    protected String instanceName ;
+
     public abstract ChannelFuture run();
 
     public void close(){

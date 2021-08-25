@@ -132,7 +132,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.info("proxyClient has disConnected ,exposeServer will be closed ! ");
+        log.debug("proxyClient has disConnected ,exposeServer will be closed ! ");
         //step 1: close shutDown exposeServer
         nettyRemotingServer.shutdownGracefully();
         //step 2: remove proxyClient cached channel
@@ -146,7 +146,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         //step 1:close clientChannel
         ChannelHolder.getIIdChannel(serialNumber).close();
         //step 2:remove cached clientChannel
-        // ChannelHolder.removeIdChannel(serialNumber);
+        ChannelHolder.removeIdChannel(serialNumber);
     }
 
     @Override
