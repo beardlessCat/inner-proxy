@@ -12,7 +12,7 @@ public class ProxyMessageDecoder extends LengthFieldBasedFrameDecoder {
 
     private static final int SERIAL_NUMBER_SIZE = 1;
 
-    private static final int URI_LENGTH_SIZE = 1;
+    private static final int META_DATA_LENGTH_SIZE = 4;
 
     /**
      * @param maxFrameLength
@@ -73,14 +73,14 @@ public class ProxyMessageDecoder extends LengthFieldBasedFrameDecoder {
         /**
          * metaData
          */
-        byte uriLength = in.readByte();
-        byte[] metaDataBytes = new byte[uriLength];
+        int metaDataLength = in.readInt();
+        byte[] metaDataBytes = new byte[metaDataLength];
         in.readBytes(metaDataBytes);
         proxyMessage.setMateData(new String(metaDataBytes));
         /**
          * data
          */
-        byte[] data = new byte[frameLength - TYPE_SIZE - SERIAL_NUMBER_SIZE - URI_LENGTH_SIZE - snLength - uriLength];
+        byte[] data = new byte[frameLength - TYPE_SIZE - SERIAL_NUMBER_SIZE - META_DATA_LENGTH_SIZE - snLength - metaDataLength];
         in.readBytes(data);
         proxyMessage.setData(data);
 

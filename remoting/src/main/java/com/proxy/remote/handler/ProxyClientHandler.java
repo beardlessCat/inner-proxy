@@ -48,6 +48,8 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         metaDate.put("clientSecret",clientInfo.getClientSecret());
         metaDate.put("exposeServerPort",clientInfo.getExposeServerPort());
         metaDate.put("exposeServerHost",clientInfo.getExposeServerHost());
+        metaDate.put("innerHost",clientInfo.getInnerHost());
+        metaDate.put("innerPort",clientInfo.getInnerPort());
         String  metaStr= JsonUtil.objToStr(metaDate);
         ProxyMessage proxyMessage = ProxyMessage.builder().type(ProxyMessage.TYPE_AUTH).mateData(metaStr).build();
         ctx.writeAndFlush(proxyMessage);

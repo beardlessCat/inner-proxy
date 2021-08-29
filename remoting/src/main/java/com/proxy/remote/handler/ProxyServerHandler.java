@@ -5,6 +5,7 @@ import com.proxy.Constants;
 import com.proxy.ProxyMessage;
 import com.proxy.callback.CallBack;
 import com.proxy.holder.ChannelHolder;
+import com.proxy.metrics.handler.BytesFlowHandler;
 import com.proxy.remote.NettyRemotingServer;
 import com.proxy.utils.JsonUtil;
 import io.netty.buffer.ByteBuf;
@@ -61,6 +62,8 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         String clientSecret =(String) map.get("clientSecret");
         int exposeServerPort = (int) map.get("exposeServerPort");
         String exposeServerHost =(String) map.get("exposeServerHost");
+        int innerPort = (int) map.get("innerPort");
+        String innerHost =(String) map.get("innerHost");
         boolean authSuccess = this.validateClient(clientKey,clientSecret) ;
         String authResultMsg = Constants.AUTH_RESULT_FAIL;
         if(authSuccess){
@@ -68,7 +71,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             authResultMsg = Constants.AUTH_RESULT_SUCCESS;
             //启动客户端，用于接受客户端的http消息。
             ChannelInitializer channelInitializer = getChannelInitializer(ctx);
-            CallBack callBack = getCallBack(exposeServerPort, exposeServerHost);
+            CallBack callBack = getCallBack(exposeServerPort, exposeServerHost,innerPort,innerHost);
             this.nettyRemotingServer = new NettyRemotingServer(channelInitializer, callBack, new InetSocketAddress(exposeServerHost,exposeServerPort)).init();
             nettyRemotingServer.run();
         }
@@ -82,17 +85,24 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         ChannelInitializer channelInitializer = new ChannelInitializer() {
             @Override
             protected void initChannel(Channel channel) throws Exception {
+                channel.pipeline().addLast(new BytesFlowHandler());
                 channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
             }
         };
         return channelInitializer;
     }
 
-    private CallBack getCallBack(int exposeServerPort, String exposeServerHost) {
+    private CallBack getCallBack(int exposeServerPort, String exposeServerHost,int innerPort ,String innerHost) {
         CallBack callBack = new CallBack() {
             @Override
             public void success(ChannelFuture channelFuture) {
-                log.info("exposeServer({}:{}) has started successfully!", exposeServerHost, exposeServerPort);
+                log.info("\n----------------------------------------------------------   \n\t" +
+                        "exposeServer({}) has started successfully! Access URLs:         \n\t" +
+                        "ExposeUrl: \t\thttp://{}:{}/                                    \n\t" +
+                        "InnerUrl: \t\thttp://{}:{}/                                     \n\t" +
+                        "For example, the user access address is http://{}:{}/index,     \n\t" +
+                        "             and the actual access address is http://{}:{}/index        \n\t" +
+                        "----------------------------------------------------------",exposeServerPort,exposeServerHost,exposeServerPort,innerHost,innerPort,exposeServerHost,exposeServerPort,innerHost,innerPort);
             }
 
             @Override
@@ -151,6 +161,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
         //异常处理
         log.info("The client({}) actively closes the connection",ctx.channel().remoteAddress());
         ctx.close();
