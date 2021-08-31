@@ -74,9 +74,11 @@ public class ProxyMessageDecoder extends LengthFieldBasedFrameDecoder {
          * metaData
          */
         int metaDataLength = in.readInt();
-        byte[] metaDataBytes = new byte[metaDataLength];
-        in.readBytes(metaDataBytes);
-        proxyMessage.setMateData(new String(metaDataBytes));
+        if(metaDataLength>0){
+            byte[] metaDataBytes = new byte[metaDataLength];
+            in.readBytes(metaDataBytes);
+            proxyMessage.setMateData(new String(metaDataBytes));
+        }
         /**
          * data
          */

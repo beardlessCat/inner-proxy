@@ -5,11 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * 代理客户端与代理服务器消息交换协议
- *
- *
- */
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -47,5 +42,9 @@ public class ProxyMessage  implements Cloneable{
 
     public static ProxyMessage disconnectedMessage(){
         return ProxyMessage.builder().type(TYPE_DISCONNECT).build();
+    }
+
+    public static ProxyMessage heartbeatMessage(){
+        return ProxyMessage.builder().type(TYPE_HEARTBEAT).build();
     }
 }

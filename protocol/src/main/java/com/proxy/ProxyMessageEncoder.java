@@ -30,7 +30,7 @@ public class ProxyMessageEncoder extends MessageToByteEncoder<ProxyMessage> {
         if (msg.getData() != null) {
             bodyLength += msg.getData().length;
         }
-        ////|bodyLength(4)|msgType(1)|snLength(1)|Sn(8)|metaDataLength(1)|metaData(N)|Data(N)|
+        ////|bodyLength(4)|msgType(1)|snLength(1)|Sn(8)|metaDataLength(4)|metaData(N)|Data(N)|
         // write the total packet length but without length field's length.
         out.writeInt(bodyLength);
         out.writeByte(msg.getType());
@@ -45,7 +45,7 @@ public class ProxyMessageEncoder extends MessageToByteEncoder<ProxyMessage> {
             out.writeInt(metaDataBytes.length);
             out.writeBytes(metaDataBytes);
         } else {
-            out.writeByte((byte) 0x00);
+            out.writeInt(0);
         }
 
         if (msg.getData() != null) {

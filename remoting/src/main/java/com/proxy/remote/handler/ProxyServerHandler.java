@@ -119,7 +119,8 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     // handle connect  message
     private void handleConnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-
+        String serialNumber = proxyMessage.getSerialNumber();
+        ChannelHolder.getIIdChannel(serialNumber).config().setOption(ChannelOption.AUTO_READ, true);
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
@@ -166,4 +167,6 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         log.info("The client({}) actively closes the connection",ctx.channel().remoteAddress());
         ctx.close();
     }
+
+
 }
