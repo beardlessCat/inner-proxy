@@ -125,8 +125,6 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         String host=ctx.channel().attr(Constants.INNER_HOST).get() ;
         int port =ctx.channel().attr(Constants.INNER_PORT).get() ;
         String serialNumber = proxyMessage.getSerialNumber();
-        ByteBuf buf = ctx.alloc().buffer(proxyMessage.getData().length);
-        buf.writeBytes(proxyMessage.getData());
         //连接server
         ChannelInitializer channelInitializer = getChannelInitializer(serialNumber);
         CallBack callBack = getCallBack(ctx, serialNumber);

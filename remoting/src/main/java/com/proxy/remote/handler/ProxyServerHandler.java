@@ -120,7 +120,10 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     // handle connect  message
     private void handleConnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         String serialNumber = proxyMessage.getSerialNumber();
-        ChannelHolder.getIIdChannel(serialNumber).config().setOption(ChannelOption.AUTO_READ, true);
+        Channel iIdChannel = ChannelHolder.getIIdChannel(serialNumber);
+        if(iIdChannel!=null&&iIdChannel.isActive()){
+            iIdChannel.config().setOption(ChannelOption.AUTO_READ, true);
+        }
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
