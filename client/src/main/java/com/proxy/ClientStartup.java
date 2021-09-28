@@ -99,7 +99,14 @@ public class ClientStartup {
         ClientController serverController = new ClientController(new CallBack() {
             @Override
             public void success(ChannelFuture channelFuture) {
-                log.info("proxyClient has be connected to proxyServer!");
+                log.info("\n----------------------------------------------------------   \n\t" +
+                        "proxyClient({}) has started successfully! Access URLs:         \n\t" +
+                        "ExposeUrl: \t\thttp://{}:{}/                                    \n\t" +
+                        "InnerUrl: \t\thttp://{}:{}/                                     \n\t" +
+                        "For example, the user access address is http://{}:{}/index,     \n\t" +
+                        "             and the actual access address is http://{}:{}/index        \n\t" +
+                        "----------------------------------------------------------",clientInfo.getClientId(),clientInfo.getExposeServerHost(),clientInfo.getExposeServerPort(),clientInfo.getInnerHost(),clientInfo.getInnerPort(),clientInfo.getExposeServerHost(),clientInfo.getExposeServerPort(),clientInfo.getInnerHost(),clientInfo.getInnerPort());
+
             }
             @Override
             public void error() {

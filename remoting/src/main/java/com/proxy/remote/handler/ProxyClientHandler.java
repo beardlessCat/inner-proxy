@@ -116,7 +116,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             log.debug("reUser channel {}",innerChannel);
             innerChannel.writeAndFlush(buf);
         }else {
-            log.info("can not get an active channel ,will init a new channel");
+            log.info("can not get an active channel ,will init a new channel(#handleConnectMessage)");
             this.handleConnectMessage(ctx,proxyMessage);
         }
     }
@@ -136,8 +136,8 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         return new CallBack() {
             @Override
             public void success(ChannelFuture channelFuture) {
-                log.info("innerClient has be connected to server!");
                 Channel channel = channelFuture.channel();
+                log.info("innerClient() has be connected to server!",channel);
                 channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
                 ctx.channel().writeAndFlush(ProxyMessage.builder().type(ProxyMessage.TYPE_CONNECT).serialNumber(serialNumber).build());
             }
