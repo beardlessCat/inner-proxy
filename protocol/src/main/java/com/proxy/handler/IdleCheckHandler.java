@@ -19,8 +19,6 @@ public class IdleCheckHandler extends IdleStateHandler {
 
     public static final int WRITE_IDLE_TIME = 40;
 
-    private static Logger logger = LoggerFactory.getLogger(IdleCheckHandler.class);
-
     public IdleCheckHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds) {
         super(readerIdleTimeSeconds, writerIdleTimeSeconds, allIdleTimeSeconds);
     }

@@ -36,9 +36,6 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_AUTH:
                 handleAuthMessage(ctx, proxyMessage);
                 break;
-            case ProxyMessage.TYPE_CONNECT:
-                handleConnectMessage(ctx, proxyMessage);
-                break;
             case ProxyMessage.TYPE_DISCONNECT:
                 handleDisconnectMessage(ctx, proxyMessage);
                 break;
@@ -117,14 +114,6 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         return true;
     }
 
-    // handle connect  message
-    private void handleConnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-        String serialNumber = proxyMessage.getSerialNumber();
-        Channel iIdChannel = ChannelHolder.getIIdChannel(serialNumber);
-        if(iIdChannel!=null&&iIdChannel.isActive()){
-            iIdChannel.config().setOption(ChannelOption.AUTO_READ, true);
-        }
-    }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         //将response消息写会客户端
@@ -133,7 +122,11 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         buf.writeBytes(proxyMessage.getData());
         //获取客户端连接channel信息
         Channel userChannel = ChannelHolder.getIIdChannel(serialNumber);
-        userChannel.writeAndFlush(buf);
+        if(userChannel!=null&&userChannel.isActive()){
+            userChannel.writeAndFlush(buf);
+        }else {
+            log.error("client has disconnected！");
+        }
     }
 
     private void handleHeartbeatMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
@@ -168,7 +161,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         cause.printStackTrace();
         //异常处理
         log.info("The client({}) actively closes the connection",ctx.channel().remoteAddress());
-        ctx.close();
+        // ctx.close();
     }
 
 

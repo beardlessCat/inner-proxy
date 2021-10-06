@@ -19,7 +19,9 @@ public class ChannelHolder {
     public static Channel getIIdChannel(String id){
         return idChannels.get(id);
     }
-
+    public static ConcurrentHashMap<String, Channel> getIIdChannels(){
+        return idChannels;
+    }
     public static void removeIdChannel(String id){
         idChannels.remove(id);
     }
