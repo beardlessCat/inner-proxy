@@ -11,10 +11,12 @@ import com.proxy.utils.JsonUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage> {
@@ -156,6 +158,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             @Override
             protected void initChannel(Channel channel) throws Exception {
                 //channel复用时如何传递serialNumber,解决方法每一个clientChannel对应一个innerChannel
+                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 40, TimeUnit.SECONDS));
                 channel.pipeline().addLast("innerClientHandler", new InnerClientHandler(serialNumber));
             }
         };

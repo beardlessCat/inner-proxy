@@ -4,9 +4,12 @@ import com.proxy.Constants;
 import com.proxy.ProxyMessage;
 import com.proxy.holder.ChannelHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
@@ -53,6 +56,18 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         ChannelHolder.removeIdChannel(channelId);
         this.channel.writeAndFlush(ProxyMessage.disconnectedMessage());
         super.channelInactive(ctx);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        try {
+            if (evt instanceof IdleStateEvent) {
+                log.debug("exposeServer got idle event");
+                ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+            }
+        } finally {
+            super.userEventTriggered(ctx, evt);
+        }
     }
 
 }

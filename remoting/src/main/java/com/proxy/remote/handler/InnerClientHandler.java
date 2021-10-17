@@ -4,9 +4,15 @@ import com.proxy.Constants;
 import com.proxy.ProxyMessage;
 import com.proxy.holder.ChannelHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+import io.netty.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,6 +40,7 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
         ChannelHolder.addIdChannel(serialNumber,ctx.channel());
         super.channelActive(ctx);
     }
+
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         ChannelHolder.removeIdChannel(serialNumber);
@@ -44,5 +51,17 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         super.exceptionCaught(ctx, cause);
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        try {
+            if (evt instanceof IdleStateEvent) {
+                log.debug("innerClient got idle event");
+                ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+            }
+        } finally {
+            super.userEventTriggered(ctx, evt);
+        }
     }
 }

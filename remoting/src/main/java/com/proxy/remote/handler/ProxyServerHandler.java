@@ -10,11 +10,13 @@ import com.proxy.remote.NettyRemotingServer;
 import com.proxy.utils.JsonUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage> {
@@ -82,6 +84,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         ChannelInitializer channelInitializer = new ChannelInitializer() {
             @Override
             protected void initChannel(Channel channel) throws Exception {
+                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 40, TimeUnit.SECONDS));
                 channel.pipeline().addLast(new BytesFlowHandler());
                 channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
             }
@@ -151,7 +154,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         String serialNumber = proxyMessage.getSerialNumber();
         //step 1:close clientChannel
-        ChannelHolder.getIIdChannel(serialNumber).close();
+        // ChannelHolder.getIIdChannel(serialNumber).close();
         //step 2:remove cached clientChannel
         ChannelHolder.removeIdChannel(serialNumber);
     }
