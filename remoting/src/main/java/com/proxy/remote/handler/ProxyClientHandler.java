@@ -122,7 +122,10 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             //连接server
             ChannelInitializer ChannelInitializer = getChannelInitializer(serialNumber);
             CallBack callBack = getCallBack(ctx, buf);
-            NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).init();
+            //调整线程模型
+            NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group(ctx.channel().eventLoop()).init();
+            // NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group().init();
+
             nettyRemotingClient.run();
         }
     }
@@ -130,15 +133,14 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     private CallBack getCallBack(ChannelHandlerContext ctx, ByteBuf buf) {
         return new CallBack() {
             @Override
-            public void success(ChannelFuture channelFuture) {
-                log.info("innerClient has be connected to server!");
-                Channel channel = channelFuture.channel();
+            public void success(Channel channel) {
+                log.debug("innerClient has be connected to server!");
                 channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
                 if (channel.isActive()) {
                     ChannelFuture channelFuture1 = channel.writeAndFlush(buf);
                     channelFuture1.addListener(future -> {
                         if (!future.isSuccess()) {
-                            log.error("message send fail !");
+                            log.error("message s得end fail !");
                         }
                     });
                 }
@@ -158,7 +160,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             @Override
             protected void initChannel(Channel channel) throws Exception {
                 //channel复用时如何传递serialNumber,解决方法每一个clientChannel对应一个innerChannel
-                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 40, TimeUnit.SECONDS));
+                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 120, TimeUnit.SECONDS));
                 channel.pipeline().addLast("innerClientHandler", new InnerClientHandler(serialNumber));
             }
         };

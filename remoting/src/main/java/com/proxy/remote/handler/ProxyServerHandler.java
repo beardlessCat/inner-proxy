@@ -84,7 +84,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         ChannelInitializer channelInitializer = new ChannelInitializer() {
             @Override
             protected void initChannel(Channel channel) throws Exception {
-                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 40, TimeUnit.SECONDS));
+                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 120, TimeUnit.SECONDS));
                 channel.pipeline().addLast(new BytesFlowHandler());
                 channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
             }
@@ -95,7 +95,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     private CallBack getCallBack(int exposeServerPort, String exposeServerHost,int innerPort ,String innerHost) {
         CallBack callBack = new CallBack() {
             @Override
-            public void success(ChannelFuture channelFuture) {
+            public void success(Channel channel) {
                 log.info("\n----------------------------------------------------------   \n\t" +
                         "exposeServer({}) has started successfully! Access URLs:         \n\t" +
                         "ExposeUrl: \t\thttp://{}:{}/                                    \n\t" +
@@ -126,7 +126,14 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         //获取客户端连接channel信息
         Channel userChannel = ChannelHolder.getIIdChannel(serialNumber);
         if(userChannel!=null&&userChannel.isActive()){
-            userChannel.writeAndFlush(buf);
+            userChannel.writeAndFlush(buf).addListener(future -> {
+                if (future.isSuccess()) {
+
+                }else {
+                    Throwable cause = future.cause();
+                    cause.printStackTrace();
+                }
+            });
         }else {
             log.error("client has disconnected！");
         }

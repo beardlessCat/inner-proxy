@@ -1,7 +1,6 @@
 package com.proxy.remote;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.epoll.Epoll;
 
@@ -16,15 +15,11 @@ public abstract class AbstractNettyRemoting {
 
     protected static final int LENGTH_ADJUSTMENT = 0;
 
-    protected ChannelFuture future ;
 
     protected String instanceName ;
 
-    public abstract ChannelFuture run();
+    public abstract void run();
 
-    public void close(){
-        future.channel().close();
-    }
 
     public abstract void shutdownGracefully();
 

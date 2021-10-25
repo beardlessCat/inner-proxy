@@ -38,7 +38,7 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
         this.channelInitializer = channelInitializer;
     }
 
-    public NettyRemotingClient init(){
+    public NettyRemotingClient group(){
         this.nioEventLoopGroup = new NioEventLoopGroup(
                 NettyClientConfig.clientWorkerThreads,
                 new ThreadFactory() {
@@ -48,7 +48,17 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
                         return new Thread(r, "NettyClientWorkerThread_" + this.threadIndex.incrementAndGet());
                     }
                 });
-        this.bootstrap.group(this.nioEventLoopGroup).channel(NioSocketChannel.class)
+        this.bootstrap.group(this.nioEventLoopGroup);
+        return this;
+    }
+
+    public NettyRemotingClient group(EventLoop eventLoop){
+        this.bootstrap.group(eventLoop);
+        return this;
+    }
+
+    public NettyRemotingClient init(){
+        this.bootstrap.channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, NettyClientConfig.connectTimeoutMillis)
@@ -59,21 +69,19 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
     }
 
     @Override
-    public ChannelFuture run() {
-        ChannelFuture channelFuture = null;
+    public void run() {
         try {
-            channelFuture = this.bootstrap.connect(inetSocketAddress).sync();
-            callBack.success(channelFuture);
+            this.bootstrap.connect(inetSocketAddress).addListener((ChannelFutureListener)future -> {
+                if(future.isSuccess()){
+                    callBack.success(future.channel());
+                }else {
+                    callBack.error();
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
             callBack.error();
-            return null;
         }
-        channelFuture.channel().closeFuture().addListener(future1 -> {
-           shutdownGracefully();
-        });
-        future = channelFuture;
-        return channelFuture ;
     }
 
     @Override

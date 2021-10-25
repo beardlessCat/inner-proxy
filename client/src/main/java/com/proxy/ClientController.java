@@ -9,7 +9,7 @@ public class ClientController {
     private AbstractNettyRemoting abstractNettyRemoting ;
 
     public ClientController(CallBack callBack, ClientInfo clientInfo) {
-        this.abstractNettyRemoting  = new NettyRemotingClient(callBack,clientInfo).init();
+        this.abstractNettyRemoting  = new NettyRemotingClient(callBack,clientInfo).group().init();
     }
 
     public void start() {

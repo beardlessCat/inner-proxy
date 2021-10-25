@@ -51,7 +51,7 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.info("client has disConnected and will notify proxy client!");
+        log.error("client has disConnected and will notify proxy client!");
         String channelId = ctx.channel().attr(Constants.CHANNEL_ID).get();
         ChannelHolder.removeIdChannel(channelId);
         this.channel.writeAndFlush(ProxyMessage.disconnectedMessage());

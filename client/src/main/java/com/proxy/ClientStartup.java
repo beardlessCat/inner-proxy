@@ -2,6 +2,7 @@ package com.proxy;
 
 import com.proxy.callback.CallBack;
 import com.proxy.thread.ShutdownHookThread;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
@@ -98,7 +99,7 @@ public class ClientStartup {
     private static ClientController createServerController(ClientInfo clientInfo) throws ParseException {
         ClientController serverController = new ClientController(new CallBack() {
             @Override
-            public void success(ChannelFuture channelFuture) {
+            public void success(Channel channel) {
                 log.info("\n----------------------------------------------------------   \n\t" +
                         "proxyClient({}) has started successfully! Access URLs:         \n\t" +
                         "ExposeUrl: \t\thttp://{}:{}/                                    \n\t" +
@@ -106,7 +107,6 @@ public class ClientStartup {
                         "For example, the user access address is http://{}:{}/index,     \n\t" +
                         "             and the actual access address is http://{}:{}/index        \n\t" +
                         "----------------------------------------------------------",clientInfo.getClientId(),clientInfo.getExposeServerHost(),clientInfo.getExposeServerPort(),clientInfo.getInnerHost(),clientInfo.getInnerPort(),clientInfo.getExposeServerHost(),clientInfo.getExposeServerPort(),clientInfo.getInnerHost(),clientInfo.getInnerPort());
-
             }
             @Override
             public void error() {

@@ -1,10 +1,10 @@
 package com.proxy.callback;
 
-import io.netty.channel.ChannelFuture;
+import io.netty.channel.Channel;
 
 public interface CallBack {
 
-    void success(ChannelFuture channelFuture);
+    void success(Channel channel);
 
     void error();
 
