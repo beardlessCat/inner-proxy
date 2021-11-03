@@ -5,8 +5,9 @@ import com.proxy.metrics.Flow;
 import com.proxy.metrics.FlowManager;
 import com.proxy.thread.ShutdownHookThread;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.cli.*;
+import org.springframework.util.Assert;
 import sun.tools.jar.CommandLine;
 
 import java.util.List;
@@ -18,13 +19,28 @@ public class ServerStartup {
 
     private static CommandLine commandLine = null;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
         main0(args);
     }
 
-    private static void main0(String[] args) {
-        ServerController serverController = createServerController(args);
-        start(serverController);
+    private static void main0(String[] args) throws ParseException {
+        // -p_server_port 18080
+        Options options = new Options();
+        options.addOption("h", false, "Help");
+        options.addOption("p_server_port", true, "P-Server port");
+
+        CommandLineParser parser = new DefaultParser();
+        org.apache.commons.cli.CommandLine cmd = parser.parse(options, args);
+        if (cmd.hasOption("h")) {
+            // print help
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("options", options);
+        } else {
+            String pServerPort = cmd.getOptionValue("p_server_port");
+            Assert.notNull(pServerPort, "p_server_port must not be null!");
+            ServerController serverController = createServerController(Integer.parseInt(pServerPort));
+            start(serverController);
+        }
     }
 
     private static void start(ServerController serverController) {
@@ -39,7 +55,7 @@ public class ServerStartup {
         serverController.start();
     }
 
-    private static ServerController createServerController(String[] args) {
+    private static ServerController createServerController(int port) {
         //process serverConfig
         ServerController serverController = new ServerController(new CallBack() {
             @Override
@@ -65,7 +81,7 @@ public class ServerStartup {
             public void error() {
                 log.error("proxyServer startup  failed!");
             }
-        });
+        },port);
         return serverController;
     }
 }

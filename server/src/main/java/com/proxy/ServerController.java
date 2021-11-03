@@ -12,8 +12,8 @@ public class ServerController {
     private AbstractNettyRemoting abstractNettyRemoting ;
 
 
-    public ServerController(CallBack callBack) {
-        this.abstractNettyRemoting  = new NettyRemotingServer(callBack,new InetSocketAddress(NettyServerConfig.port)).init();
+    public ServerController(CallBack callBack,int port) {
+        this.abstractNettyRemoting  = new NettyRemotingServer(callBack,new InetSocketAddress(port)).init();
     }
 
     public void start() {

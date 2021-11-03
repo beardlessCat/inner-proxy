@@ -84,7 +84,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
         ChannelInitializer channelInitializer = new ChannelInitializer() {
             @Override
             protected void initChannel(Channel channel) throws Exception {
-                channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 120, TimeUnit.SECONDS));
+                // channel.pipeline().addLast("idle", new IdleStateHandler(0, 0, 120, TimeUnit.SECONDS));
                 channel.pipeline().addLast(new BytesFlowHandler());
                 channel.pipeline().addLast(new ExposeServerHandler(ctx.channel()));
             }
