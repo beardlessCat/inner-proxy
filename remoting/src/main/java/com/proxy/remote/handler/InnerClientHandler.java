@@ -4,6 +4,7 @@ import com.proxy.Constants;
 import com.proxy.ProxyMessage;
 import com.proxy.holder.ChannelHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -22,8 +23,7 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
         String clientId = channelHandlerContext.channel().attr(Constants.ClIENT_ID).get();
-        byte[] bytes = new byte[byteBuf.readableBytes()];
-        byteBuf.readBytes(bytes);
+        byte[] bytes = ByteBufUtil.getBytes(byteBuf);
         ProxyMessage proxyMessage = ProxyMessage.builder()
                 .type(ProxyMessage.TYPE_TRANSFER)
                 .data(bytes)
@@ -40,8 +40,16 @@ public class InnerClientHandler  extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //step 1 : remove cached idChannel
         ChannelHolder.removeIdChannel(serialNumber);
+        //step 2 :send TYPE_DISCONNECT message
         //不进行消息通知（不关闭client到exposeServer的连接），当有新的消息进入时，发现连接已经断开，将会重新启动客户端连接server。
+        String clientId = ctx.channel().attr(Constants.ClIENT_ID).get();
+        ProxyMessage proxyMessage = ProxyMessage.builder()
+                .type(ProxyMessage.TYPE_DISCONNECT)
+                .serialNumber(serialNumber).build();
+        Channel channel = ChannelHolder.getChannel(clientId);
+        channel.writeAndFlush(proxyMessage);
         super.channelInactive(ctx);
     }
 

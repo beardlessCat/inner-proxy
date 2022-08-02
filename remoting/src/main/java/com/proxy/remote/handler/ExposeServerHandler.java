@@ -4,14 +4,13 @@ import com.proxy.Constants;
 import com.proxy.ProxyMessage;
 import com.proxy.holder.ChannelHolder;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
 import java.util.UUID;
 
 /**
@@ -32,9 +31,7 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
-        // Channel channel = ctx.channel().attr(Constants.PROXY_CHANNEL).get();
-        byte[] bytes = new byte[buf.readableBytes()];
-        buf.readBytes(bytes);
+        byte[] bytes = ByteBufUtil.getBytes(buf);
         ProxyMessage proxyMessage = ProxyMessage.builder().type(ProxyMessage.TYPE_TRANSFER).data(bytes).build();
         String serialNumber = ctx.channel().attr(Constants.CHANNEL_ID).get();
         proxyMessage.setSerialNumber(serialNumber);
@@ -47,6 +44,11 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         String serialNumber = UUID.randomUUID().toString().replace("-","");
         ChannelHolder.addIdChannel(serialNumber,ctx.channel());
         ctx.channel().attr(Constants.CHANNEL_ID).set(serialNumber);
+        //config channel AUTO_READ false
+        ctx.channel().config().setOption(ChannelOption.AUTO_READ, false);
+        //send TYPE_CONNECT message
+        ProxyMessage message = ProxyMessage.builder().type(ProxyMessage.TYPE_CONNECT).serialNumber(serialNumber).build();
+        this.channel.writeAndFlush(message);
     }
 
     @Override
@@ -68,6 +70,11 @@ public class ExposeServerHandler extends SimpleChannelInboundHandler<ByteBuf> {
         } finally {
             super.userEventTriggered(ctx, evt);
         }
+    }
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        log.debug("config channel auto_read {}" ,ctx.channel().isWritable());
+        super.channelWritabilityChanged(ctx);
     }
 
 }

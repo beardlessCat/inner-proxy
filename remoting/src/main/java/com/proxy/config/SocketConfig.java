@@ -10,7 +10,7 @@ public class SocketConfig {
 
     private int tcpReceiveBufferSize = -1;
 
-    private boolean tcpKeepAlive = false;
+    private boolean tcpKeepAlive = true;
 
     private int soLinger = -1;
 

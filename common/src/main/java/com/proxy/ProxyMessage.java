@@ -25,6 +25,9 @@ public class ProxyMessage  implements Cloneable{
 
     /** 心跳消息 */
     public static final byte TYPE_HEARTBEAT = 0x05;
+
+    /** 心跳消息 */
+    public static final byte TYPE_CONNECT = 0x06;
     /** 类型 */
     private byte type;
 

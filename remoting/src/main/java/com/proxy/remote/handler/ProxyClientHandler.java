@@ -31,15 +31,8 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        //step 1:close innerChannel
-
-        //step 2:remove cached innerChannel
-
-        //step 3:shuntDown proxyClient
-        ctx.channel().close();
-        //step 4:remove cached proxyClient
+        //remove cached proxyClient
         ChannelHolder.removeChannel(clientInfo.getClientId());
-
     }
 
     @Override
@@ -70,9 +63,25 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_TRANSFER:
                 handleTransferMessage(ctx, proxyMessage);
                 break;
+            case ProxyMessage.TYPE_CONNECT:
+                handleConnectMessage(ctx, proxyMessage);
+                break;
             default:
                 break;
         }
+    }
+
+    private void handleConnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
+        String host=ctx.channel().attr(Constants.INNER_HOST).get() ;
+        int port =ctx.channel().attr(Constants.INNER_PORT).get() ;
+        String serialNumber = proxyMessage.getSerialNumber();
+        //连接server
+        ChannelInitializer ChannelInitializer = getChannelInitializer(serialNumber);
+        CallBack callBack = getCallBack(ctx,serialNumber);
+        //调整线程模型
+        NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group(ctx.channel().eventLoop()).init();
+        // NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group().init().ru;
+        nettyRemotingClient.run();
     }
 
     /**
@@ -107,43 +116,26 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
     }
 
     private void handleTransferMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
-        String host=ctx.channel().attr(Constants.INNER_HOST).get() ;
-        int port =ctx.channel().attr(Constants.INNER_PORT).get() ;
+
         String serialNumber = proxyMessage.getSerialNumber();
         ByteBuf buf = ctx.alloc().buffer(proxyMessage.getData().length);
         buf.writeBytes(proxyMessage.getData());
         Channel innerChannel = ChannelHolder.getIIdChannel(serialNumber);
         //channel复用
-        if(innerChannel!=null&&innerChannel.isActive()){
-            log.debug("reUser channel {}",innerChannel);
-            innerChannel.writeAndFlush(buf);
-        }else {
-            log.info("can not get an active channel ,will init a new channel");
-            //连接server
-            ChannelInitializer ChannelInitializer = getChannelInitializer(serialNumber);
-            CallBack callBack = getCallBack(ctx, buf);
-            //调整线程模型
-            NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group(ctx.channel().eventLoop()).init();
-            // NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group().init();
-
-            nettyRemotingClient.run();
-        }
+        // if(innerChannel!=null&&innerChannel.isActive()){
+        innerChannel.writeAndFlush(buf);
     }
 
-    private CallBack getCallBack(ChannelHandlerContext ctx, ByteBuf buf) {
+    private CallBack getCallBack(ChannelHandlerContext ctx,String serialNumber) {
         return new CallBack() {
             @Override
             public void success(Channel channel) {
                 log.debug("innerClient has be connected to server!");
                 channel.attr(Constants.ClIENT_ID).set(clientInfo.getClientId());
-                if (channel.isActive()) {
-                    ChannelFuture channelFuture1 = channel.writeAndFlush(buf);
-                    channelFuture1.addListener(future -> {
-                        if (!future.isSuccess()) {
-                            log.error("message s得end fail !");
-                        }
-                    });
-                }
+                ChannelHolder.addIdChannel(serialNumber,channel);
+                //send TYPE_CONNECT message to config clientChannel
+                ProxyMessage message = ProxyMessage.builder().type(ProxyMessage.TYPE_CONNECT).serialNumber(serialNumber).build();
+                ctx.writeAndFlush(message);
             }
 
             @Override

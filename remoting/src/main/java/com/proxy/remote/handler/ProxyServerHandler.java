@@ -10,13 +10,11 @@ import com.proxy.remote.NettyRemotingServer;
 import com.proxy.utils.JsonUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
-import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage> {
@@ -44,9 +42,19 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
             case ProxyMessage.TYPE_TRANSFER:
                 handleTransferMessage(ctx, proxyMessage);
                 break;
+            case ProxyMessage.TYPE_CONNECT:
+                handleConnectMessage(ctx, proxyMessage);
+                break;
             default:
                 break;
         }
+    }
+
+    private void handleConnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
+        String serialNumber = proxyMessage.getSerialNumber();
+        //获取客户端连接channel信息
+        Channel userChannel = ChannelHolder.getIIdChannel(serialNumber);
+        userChannel.config().setOption(ChannelOption.AUTO_READ,true);
     }
 
     /**
@@ -135,7 +143,13 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
                 }
             });
         }else {
-            log.error("client has disconnected！");
+            if(userChannel==null){
+                log.error("can not get channel by serialNumber！");
+
+            }else {
+                log.error("client has disconnected！");
+
+            }
         }
     }
 
@@ -161,7 +175,7 @@ public class ProxyServerHandler extends SimpleChannelInboundHandler<ProxyMessage
     private void handleDisconnectMessage(ChannelHandlerContext ctx, ProxyMessage proxyMessage) {
         String serialNumber = proxyMessage.getSerialNumber();
         //step 1:close clientChannel
-        // ChannelHolder.getIIdChannel(serialNumber).close();
+        ChannelHolder.getIIdChannel(serialNumber).close();
         //step 2:remove cached clientChannel
         ChannelHolder.removeIdChannel(serialNumber);
     }
