@@ -79,7 +79,7 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         ChannelInitializer ChannelInitializer = getChannelInitializer(serialNumber);
         CallBack callBack = getCallBack(ctx,serialNumber);
         //调整线程模型
-        NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group(ctx.channel().eventLoop()).init();
+        NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group(ctx.channel().eventLoop()).init(false);
         // NettyRemotingClient nettyRemotingClient = new NettyRemotingClient(ChannelInitializer,callBack, host, port).group().init().ru;
         nettyRemotingClient.run();
     }
@@ -122,8 +122,13 @@ public class ProxyClientHandler extends SimpleChannelInboundHandler<ProxyMessage
         buf.writeBytes(proxyMessage.getData());
         Channel innerChannel = ChannelHolder.getIIdChannel(serialNumber);
         //channel复用
-        // if(innerChannel!=null&&innerChannel.isActive()){
-        innerChannel.writeAndFlush(buf);
+        if(innerChannel!=null&&innerChannel.isActive()){
+            innerChannel.writeAndFlush(buf).addListener(future -> {
+                if ( future.isSuccess()) {
+                    innerChannel.read();
+                }
+            });
+        }
     }
 
     private CallBack getCallBack(ChannelHandlerContext ctx,String serialNumber) {

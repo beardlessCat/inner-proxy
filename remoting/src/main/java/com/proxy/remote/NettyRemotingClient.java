@@ -57,10 +57,11 @@ public class NettyRemotingClient extends AbstractNettyRemoting{
         return this;
     }
 
-    public NettyRemotingClient init(){
+    public NettyRemotingClient init(boolean autoRead){
         this.bootstrap.channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.SO_KEEPALIVE, true)
+                .option(ChannelOption.AUTO_READ, autoRead)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, NettyClientConfig.connectTimeoutMillis)
                 .option(ChannelOption.SO_SNDBUF, NettyClientConfig.clientSocketSndBufSize)
                 .option(ChannelOption.SO_RCVBUF, NettyClientConfig.clientSocketRcvBufSize)

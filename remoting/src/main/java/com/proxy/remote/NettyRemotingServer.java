@@ -40,14 +40,13 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
         this.channelInitializer = channelInitializer;
         super.instanceName = Constants.EXPOSE_SERVER_NAME;
     }
-    @Override
     public NettyRemotingServer init() {
         initEventLoopGroup();
         this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupWorker)
                 .channel(useEpoll()? EpollServerSocketChannel.class: NioServerSocketChannel.class)
                 .childHandler(this.channelInitializer)
                 .localAddress(this.inetSocketAddress);
-        applyConnectionOptions(this.serverBootstrap);
+        applyConnectionOptions();
         return this;
     }
 
@@ -90,22 +89,21 @@ public class NettyRemotingServer extends AbstractNettyRemoting{
 
     /**
      * 配置连接属性
-     * @param bootstrap
      */
-    private void applyConnectionOptions(ServerBootstrap bootstrap) {
+    private void applyConnectionOptions() {
         SocketConfig config = NettyServerConfig.socketConfig;
-        bootstrap.childOption(ChannelOption.TCP_NODELAY, config.isTcpNoDelay());
+        serverBootstrap.childOption(ChannelOption.TCP_NODELAY, config.isTcpNoDelay());
         if (config.getTcpSendBufferSize() != -1) {
-            bootstrap.childOption(ChannelOption.SO_SNDBUF, config.getTcpSendBufferSize());
+            serverBootstrap.childOption(ChannelOption.SO_SNDBUF, config.getTcpSendBufferSize());
         }
         if (config.getTcpReceiveBufferSize() != -1) {
-            bootstrap.childOption(ChannelOption.SO_RCVBUF, config.getTcpReceiveBufferSize());
-            bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(config.getTcpReceiveBufferSize()));
+            serverBootstrap.childOption(ChannelOption.SO_RCVBUF, config.getTcpReceiveBufferSize());
+            serverBootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(config.getTcpReceiveBufferSize()));
         }
-        bootstrap.childOption(ChannelOption.SO_KEEPALIVE, config.isTcpKeepAlive());
-        bootstrap.childOption(ChannelOption.SO_LINGER, config.getSoLinger());
-        bootstrap.option(ChannelOption.SO_REUSEADDR, config.isReuseAddress());
-        bootstrap.option(ChannelOption.SO_BACKLOG, config.getAcceptBackLog());
+        serverBootstrap.childOption(ChannelOption.SO_KEEPALIVE, config.isTcpKeepAlive());
+        serverBootstrap.childOption(ChannelOption.SO_LINGER, config.getSoLinger());
+        serverBootstrap.option(ChannelOption.SO_REUSEADDR, config.isReuseAddress());
+        serverBootstrap.option(ChannelOption.SO_BACKLOG, config.getAcceptBackLog());
     }
 
     private void initEventLoopGroup() {

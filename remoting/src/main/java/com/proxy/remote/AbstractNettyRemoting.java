@@ -32,6 +32,5 @@ public abstract class AbstractNettyRemoting {
         return  Epoll.isAvailable();
     }
 
-    protected abstract AbstractNettyRemoting init();
 
 }
